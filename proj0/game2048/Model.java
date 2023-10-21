@@ -5,7 +5,7 @@ import java.util.Observable;
 
 
 /** The state of a game of 2048.
- *  @author TODO: YOUR NAME HERE
+ *  @author Ziyue SHen
  */
 public class Model extends Observable {
     /** Current contents of the board. */
@@ -137,7 +137,17 @@ public class Model extends Observable {
      *  Empty spaces are stored as null.
      * */
     public static boolean emptySpaceExists(Board b) {
-        // TODO: Fill in this function.
+        int c = 0;
+        while (c < b.size()) {
+            int r = 0;
+            while (r < b.size()) {
+                if (b.tile(c, r) == null) {
+                    return true;
+                }
+                r += 1;
+            }
+            c += 1;
+        }
         return false;
     }
 
@@ -147,7 +157,21 @@ public class Model extends Observable {
      * given a Tile object t, we get its value with t.value().
      */
     public static boolean maxTileExists(Board b) {
-        // TODO: Fill in this function.
+        int c = 0;
+        while (c < b.size()) {
+            int r = 0;
+            while (r < b.size()) {
+                Tile current_tile = b.tile(c, r);
+                r += 1;
+                if (current_tile == null) {
+                    continue;
+                }
+                if (current_tile.value() == MAX_PIECE) {
+                    return true;
+                }
+            }
+            c += 1;
+        }
         return false;
     }
 
@@ -158,7 +182,33 @@ public class Model extends Observable {
      * 2. There are two adjacent tiles with the same value.
      */
     public static boolean atLeastOneMoveExists(Board b) {
-        // TODO: Fill in this function.
+        if (emptySpaceExists(b)) {
+            return true;
+        }
+        // compare every tile with the right one and the upper one
+        else {
+            int c = 0;
+            while (c < b.size()) {
+                int r = 0;
+                while (r < b.size()) {
+                    Tile current_tile = b.tile(c, r);
+                    if (c + 1 < b.size()) {  //right edge
+                        Tile right_tile = b.tile(c + 1, r);
+                        if (current_tile.value() == right_tile.value()) {
+                            return true;
+                        }
+                    }
+                    if (r + 1 < b.size()) {
+                        Tile upper_tile = b.tile(c, r + 1);
+                        if (current_tile.value() == upper_tile.value()) {
+                            return true;
+                        }
+                    }
+                    r += 1;
+                }
+            c += 1;
+            }
+        }
         return false;
     }
 
