@@ -86,20 +86,20 @@ public class Board implements Iterable<Tile> {
      * Returns whether or not this move is a merge.
      * */
     public boolean move(int col, int row, Tile tile) {
-        int pcol = viewPerspective.col(col, row, size()),
+        int pcol = viewPerspective.col(col, row, size()),  // the target coordinates
                 prow = viewPerspective.row(col, row, size());
         if (tile.col() == pcol && tile.row() == prow) {
-            return false;
+            return false;   //already at target location
         }
-        Tile tile1 = vtile(col, row, viewPerspective);
-        values[tile.col()][tile.row()] = null;
+        Tile tile1 = vtile(col, row, viewPerspective);  // tile at target location
+        values[tile.col()][tile.row()] = null;   //remove the tile from its current location
 
-        if (tile1 == null) {
-            values[pcol][prow] = tile.move(pcol, prow);
+        if (tile1 == null) {  // no tile at target location
+            values[pcol][prow] = tile.move(pcol, prow);  //return the result of moving
             return false;
         } else {
             values[pcol][prow] = tile.merge(pcol, prow, tile1);
-            return true;
+            return true;  //merge happened
         }
     }
 

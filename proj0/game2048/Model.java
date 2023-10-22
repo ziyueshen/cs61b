@@ -2,7 +2,8 @@ package game2048;
 
 import java.util.Formatter;
 import java.util.Observable;
-
+import java.util.ArrayList;
+import java.util.List;
 
 /** The state of a game of 2048.
  *  @author Ziyue SHen
@@ -110,6 +111,15 @@ public class Model extends Observable {
         boolean changed;
         changed = false;
 
+        // now we are in the Class Model
+        // defining method within method is not allowed in Java
+        ArrayList<Boolean> scoreList = new ArrayList<>();   // keep track of change, need to import
+        score = forEachColumn(board, scoreList);
+        for (Boolean value : scoreList) {
+            if (value == true) {
+                changed = true;
+            }
+        }
         // TODO: Modify this.board (and perhaps this.score) to account
         // for the tilt to the Side SIDE. If the board changed, set the
         // changed local variable to true.
@@ -119,6 +129,61 @@ public class Model extends Observable {
             setChanged();
         }
         return changed;
+    }
+
+    /** return the score from each move of a tile*/
+    public int forOneTile(Tile t, Board board, ArrayList scorelist, ArrayList listMerge) {
+        int c = t.col();
+        int r = t.row() + 1;    // the nearest upper tile
+        int ttl = board.size();
+        int prevMerge = 100;
+        if (listMerge.size() > 0) {
+            prevMerge = (int) listMerge.get(listMerge.size() - 1);  //the tile last merged in this column
+        }
+        while (tile(c, r) == null && r < ttl - 1) {
+            r += 1;
+        }
+        if (tile(c, r) == null) {
+            board.move(c, r, t);
+            scorelist.add(true);
+            return 0;
+        } else if (tile(c, r).value() == t.value() && r < prevMerge) {  // can't merge 2 times
+            board.move(c, r, t);
+            scorelist.add(true);
+            listMerge.add(r);
+            return  t.value() * 2; // if merged, return score
+        } else {
+            board.move(c, r - 1, t);
+            if (r - 1 > t.row()) {
+                scorelist.add(true);
+            }
+            return 0;
+        }
+    }
+
+    /** process every tile in a column 'c', start from the 2nd row top down */
+    public int forOneColumn(int c, Board board, ArrayList scorelist) {
+        int res = 0; // for score
+        int ttl = board.size();
+        ArrayList<Integer> listMerge = new ArrayList<>();  //keep track of merged tile
+        for (int i = ttl - 2; i >= 0; i--) {
+            if (tile(c, i) == null) {
+                continue;
+            }
+            Tile currentTile = tile(c, i);   // have to deal with null
+            res += forOneTile(currentTile, board, scorelist, listMerge);
+        }
+        return res;
+    }
+
+    /** process every column */
+    public int forEachColumn(Board board, ArrayList scorelist) {
+        int res = 0; // for score
+        int ttl = board.size();
+        for  (int i = ttl - 1; i >= 0; i--) {
+            res += forOneColumn(i, board, scorelist);
+        }
+        return res;
     }
 
     /** Checks if the game is over and sets the gameOver variable
