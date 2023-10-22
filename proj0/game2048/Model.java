@@ -108,33 +108,44 @@ public class Model extends Observable {
      *    and the trailing tile does not.
      * */
     public boolean tilt(Side side) {
-        boolean changed;
-        changed = false;
 
-        // now we are in the Class Model
-        // defining method within method is not allowed in Java
-        ArrayList<Boolean> scoreList = new ArrayList<>();   // keep track of change, need to import
-        score = forEachColumn(board, scoreList);
-        for (Boolean value : scoreList) {
-            if (value == true) {
-                changed = true;
+            boolean changed;
+            changed = false;
+        if (side == Side.NORTH) {
+            // now we are in the Class Model
+            // defining method within method is not allowed in Java
+            ArrayList<Boolean> scoreList = new ArrayList<>();   // keep track of change, need to import
+
+            score += forEachColumn(board, scoreList); // main task
+
+            for (Boolean value : scoreList) {
+                if (value == true) {
+                    changed = true;
+                }
             }
-        }
-        // TODO: Modify this.board (and perhaps this.score) to account
-        // for the tilt to the Side SIDE. If the board changed, set the
-        // changed local variable to true.
+            // TODO: Modify this.board (and perhaps this.score) to account
+            // for the tilt to the Side SIDE. If the board changed, set the
+            // changed local variable to true.
 
-        checkGameOver();
-        if (changed) {
-            setChanged();
+            checkGameOver();
+            if (changed) {
+                setChanged();
+            }
+
+        } else {
+            board.setViewingPerspective(side);   // outside of tilt, not working
+            changed = tilt(Side.NORTH);
+
         }
+        board.setViewingPerspective(Side.NORTH);
         return changed;
     }
 
     /** return the score from each move of a tile*/
-    public int forOneTile(Tile t, Board board, ArrayList scorelist, ArrayList listMerge) {
-        int c = t.col();
-        int r = t.row() + 1;    // the nearest upper tile
+    public int forOneTile(int col, int row, Tile t, Board board, ArrayList scorelist, ArrayList listMerge) {
+        int c = col;        // need to pass in the coordinates in the South view
+        int r = row + 1;    // the nearest upper tile
+        // tile(2, 1) in South is 2@(1, 2) in default North, so can't use t.col() to access correct col
         int ttl = board.size();
         int prevMerge = 100;
         if (listMerge.size() > 0) {
@@ -154,7 +165,7 @@ public class Model extends Observable {
             return  t.value() * 2; // if merged, return score
         } else {
             board.move(c, r - 1, t);
-            if (r - 1 > t.row()) {
+            if (r - 1 > row) {
                 scorelist.add(true);
             }
             return 0;
@@ -171,7 +182,7 @@ public class Model extends Observable {
                 continue;
             }
             Tile currentTile = tile(c, i);   // have to deal with null
-            res += forOneTile(currentTile, board, scorelist, listMerge);
+            res += forOneTile(c, i, currentTile, board, scorelist, listMerge);
         }
         return res;
     }

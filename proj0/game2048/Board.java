@@ -16,7 +16,7 @@ public class Board implements Iterable<Tile> {
     /** Side that the board currently views as north. */
     private Side viewPerspective;
 
-    public Board(int size) {
+    public Board(int size) {    //__init__ in Python
         values = new Tile[size][size];
         viewPerspective = Side.NORTH;
     }
@@ -60,7 +60,7 @@ public class Board implements Iterable<Tile> {
      *  oriented so that SIDE is at the top (farthest) from you. */
     private Tile vtile(int col, int row, Side side) {
         return values[side.col(col, row, size())][side.row(col, row, size())];
-    }
+    }  // calling the side.col() & side.row() method, renewing the coordinates
 
     /** Return the current Tile at (COL, ROW), where 0 <= ROW < size(),
      *  0 <= COL < size(). Returns null if there is no tile there. */
