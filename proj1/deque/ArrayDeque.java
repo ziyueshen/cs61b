@@ -1,5 +1,6 @@
 package deque;
 
+/**Use mod to simplify the if-else */
 public class ArrayDeque<AnyThing> {
     private AnyThing[] items;
     private int size;
@@ -12,6 +13,12 @@ public class ArrayDeque<AnyThing> {
         nextFirst = 4;
         nextLast = 5;
     }
+
+    private void resize(int capacity) {
+        AnyThing[] a = (AnyThing []) new Object[capacity];
+        System.arraycopy(items, 0, a, 0, size);
+        items = a;
+    }
     public boolean isEmpty() {
         if ( size == 0) {
             return true;
@@ -21,34 +28,38 @@ public class ArrayDeque<AnyThing> {
 
     /** Inserts X into the back of the list. */
     public void addLast(AnyThing x) {
-        if (nextLast < items.length) {
-            items[nextLast] = x;
+        if (size == items.length) {
+            resize (size * 2);
+            nextLast += 8;
+        }
+        items[nextLast] = x;
+        if (nextLast < items.length - 1) {
             nextLast += 1;
         } else {
-            items[0] = x;
-            nextLast = 1;
+            nextLast = 0;
         }
         size += 1;
-    }
+    } 
     /** Inserts X into the front of the list. */
     public void addFirst(AnyThing x) {
-        if (nextFirst >= 0) {
-            items[nextFirst] = x;
+        if (size == items.length) {
+            resize (size * 2);
+            nextFirst += 8;
+        }
+        items[nextFirst] = x;
+        if (nextFirst > 0) {
             nextFirst -= 1;
         } else {
-            items[items.length - 1] = x;
-            nextFirst = items.length - 2;
+            nextFirst = items.length - 1;
         }
         size += 1;
     }
 
     /** Gets the ith item in the list (0 is the front). */
     public AnyThing get(int index) {
-        int realIndex;
-        if (nextFirst == items.length - 1) {
-            realIndex = index;
-        } else {
-            realIndex = nextFirst + 1 + index;
+        int realIndex = nextFirst + 1 + index;
+        if (nextFirst > items.length - 1) {
+            realIndex -= items.length;  // Can use mod to simplify.
         }
         return items[realIndex];
     }
@@ -109,7 +120,7 @@ public class ArrayDeque<AnyThing> {
         }
         while(keepTrack > 0) {
             keepTrack -= 1;
-            System.out.print(items[startPrint]);
+            System.out.print(items[startPrint] + " ");
             if (startPrint == items.length - 1) {
                 startPrint = 0;
             } else {
@@ -117,5 +128,6 @@ public class ArrayDeque<AnyThing> {
             }
             startPrint += 1;
         }
+        System.out.println();
     }
 }
