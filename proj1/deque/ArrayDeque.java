@@ -2,7 +2,7 @@ package deque;
 
 /**Use mod to simplify the if-else */
 public class ArrayDeque<AnyThing> {
-    private AnyThing[] items;
+    private AnyThing[] items;  // public for testing, change to private
     private int size;
     private int nextFirst;
     private int nextLast;
@@ -16,7 +16,8 @@ public class ArrayDeque<AnyThing> {
 
     private void resize(int capacity) {
         AnyThing[] a = (AnyThing []) new Object[capacity];
-        System.arraycopy(items, 0, a, 0, size);
+        System.arraycopy(items, 0, a, 0, nextLast);
+        System.arraycopy(items, nextFirst + 1, a, nextFirst + 1 + capacity - items.length, items.length - nextLast);
         items = a;
     }
     public boolean isEmpty() {
@@ -30,7 +31,12 @@ public class ArrayDeque<AnyThing> {
     public void addLast(AnyThing x) {
         if (size == items.length) {
             resize (size * 2);
-            nextLast += 8;
+            if (nextLast == 0) {
+                nextLast += items.length / 2;
+            }
+            if (nextFirst != items.length) {
+                nextFirst += items.length / 2;
+            }
         }
         items[nextLast] = x;
         if (nextLast < items.length - 1) {
@@ -44,7 +50,12 @@ public class ArrayDeque<AnyThing> {
     public void addFirst(AnyThing x) {
         if (size == items.length) {
             resize (size * 2);
-            nextFirst += 8;
+            if (nextLast == 0) {
+                nextLast += items.length / 2;
+            }
+            if (nextFirst != items.length) {
+                nextFirst += items.length / 2;
+            }
         }
         items[nextFirst] = x;
         if (nextFirst > 0) {
@@ -59,7 +70,7 @@ public class ArrayDeque<AnyThing> {
     public AnyThing get(int index) {
         if (index < items.length) {
             int realIndex = nextFirst + 1 + index;
-            if (nextFirst > items.length - 1) {
+            if (realIndex > items.length - 1) {
                 realIndex -= items.length;  // Can use mod to simplify.
             }
             return items[realIndex];
@@ -128,9 +139,8 @@ public class ArrayDeque<AnyThing> {
             if (startPrint == items.length - 1) {
                 startPrint = 0;
             } else {
-                startPrint = nextFirst + 1;
+                startPrint = startPrint + 1;
             }
-            startPrint += 1;
         }
         System.out.println();
     }

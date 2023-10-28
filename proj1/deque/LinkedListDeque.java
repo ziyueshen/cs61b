@@ -90,7 +90,7 @@ public class LinkedListDeque<AnyThing> {
     public void printDeque() {
         AnyNode p = sentinel.next;
         // Move p until it reaches the end of the list.
-        while (p.next != sentinel) {
+        while (p != sentinel) {
             System.out.print(p.item + " ");
             p = p.next;
         }
