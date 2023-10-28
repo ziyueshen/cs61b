@@ -57,11 +57,15 @@ public class ArrayDeque<AnyThing> {
 
     /** Gets the ith item in the list (0 is the front). */
     public AnyThing get(int index) {
-        int realIndex = nextFirst + 1 + index;
-        if (nextFirst > items.length - 1) {
-            realIndex -= items.length;  // Can use mod to simplify.
+        if (index < items.length) {
+            int realIndex = nextFirst + 1 + index;
+            if (nextFirst > items.length - 1) {
+                realIndex -= items.length;  // Can use mod to simplify.
+            }
+            return items[realIndex];
+        } else {
+            return null;
         }
-        return items[realIndex];
     }
 
     /** Returns the number of items in the list. */
