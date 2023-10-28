@@ -44,7 +44,13 @@ public class ArrayDeque<AnyThing> {
 
     /** Gets the ith item in the list (0 is the front). */
     public AnyThing get(int index) {
-        return items[index];
+        int realIndex;
+        if (nextFirst == items.length - 1) {
+            realIndex = index;
+        } else {
+            realIndex = nextFirst + 1 + index;
+        }
+        return items[realIndex];
     }
 
     /** Returns the number of items in the list. */
@@ -55,34 +61,40 @@ public class ArrayDeque<AnyThing> {
     /** Deletes item from back of the list and
      * returns deleted item. */
     public AnyThing removeLast() {
-        AnyThing lstItem;
-        size -= 1;
-        if (nextLast == 0) {
-            lstItem = items[items.length - 1];
-            items[items.length - 1] = null;
-            nextLast = items.length - 1;
-        } else {
-            lstItem = items[nextLast - 1];
-            items[nextLast - 1] = null;
-            nextLast -= 1;
+        if (size > 0) {
+            AnyThing lstItem;
+            size -= 1;
+            if (nextLast == 0) {
+                lstItem = items[items.length - 1];
+                items[items.length - 1] = null;
+                nextLast = items.length - 1;
+            } else {
+                lstItem = items[nextLast - 1];
+                items[nextLast - 1] = null;
+                nextLast -= 1;
+            }
+            return lstItem;
         }
-        return lstItem;
+        return null;
     }
     /** Deletes item from front of the list and
      * returns deleted item. */
     public AnyThing removeFirst() {
-        size -= 1;
-        AnyThing fstItem;
-        if (nextFirst == items.length - 1) {
-            fstItem = items[0];
-            items[0] = null;
-            nextFirst = 0;
-        } else {
-            fstItem = items[nextFirst + 1];
-            items[nextFirst + 1] = null;
-            nextFirst += 1;
+        if (size > 0) {
+            size -= 1;
+            AnyThing fstItem;
+            if (nextFirst == items.length - 1) {
+                fstItem = items[0];
+                items[0] = null;
+                nextFirst = 0;
+            } else {
+                fstItem = items[nextFirst + 1];
+                items[nextFirst + 1] = null;
+                nextFirst += 1;
+            }
+            return fstItem;
         }
-        return fstItem;
+        return null;
     }
 
     /** Prints the items in the deque from first to last, separated by a space.
