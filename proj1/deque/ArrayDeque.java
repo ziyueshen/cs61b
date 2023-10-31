@@ -1,7 +1,7 @@
 package deque;
 
 /**Use mod to simplify the if-else */
-public class ArrayDeque<AnyThing> {
+public class ArrayDeque<AnyThing> implements Deque<AnyThing>{
     private AnyThing[] items;  // public for testing, change to private
     private int size;
     private int nextFirst;
@@ -20,14 +20,16 @@ public class ArrayDeque<AnyThing> {
         System.arraycopy(items, nextFirst + 1, a, nextFirst + 1 + capacity - items.length, items.length - nextLast);
         items = a;
     }
-    public boolean isEmpty() {
-        if ( size == 0) {
-            return true;
-        }
-        return false;
-    }
+//    @Override
+//    public boolean isEmpty() {
+//        if ( size == 0) {
+//            return true;
+//        }
+//        return false;
+//    }
 
     /** Inserts X into the back of the list. */
+    @Override
     public void addLast(AnyThing x) {
         if (size == items.length) {
             resize (size * 2);
@@ -47,6 +49,7 @@ public class ArrayDeque<AnyThing> {
         size += 1;
     } 
     /** Inserts X into the front of the list. */
+    @Override
     public void addFirst(AnyThing x) {
         if (size == items.length) {
             resize (size * 2);
@@ -67,6 +70,7 @@ public class ArrayDeque<AnyThing> {
     }
 
     /** Gets the ith item in the list (0 is the front). */
+    @Override
     public AnyThing get(int index) {
         if (index < items.length) {
             int realIndex = nextFirst + 1 + index;
@@ -80,12 +84,14 @@ public class ArrayDeque<AnyThing> {
     }
 
     /** Returns the number of items in the list. */
+    @Override
     public int size() {
         return size;
     }
 
     /** Deletes item from back of the list and
      * returns deleted item. */
+    @Override
     public AnyThing removeLast() {
         if (size > 0) {
             AnyThing lstItem;
@@ -105,6 +111,7 @@ public class ArrayDeque<AnyThing> {
     }
     /** Deletes item from front of the list and
      * returns deleted item. */
+    @Override
     public AnyThing removeFirst() {
         if (size > 0) {
             size -= 1;
@@ -125,6 +132,7 @@ public class ArrayDeque<AnyThing> {
 
     /** Prints the items in the deque from first to last, separated by a space.
      * Once all the items have been printed, print out a new line.*/
+    @Override
     public void printDeque() {
         int keepTrack = size;
         int startPrint;

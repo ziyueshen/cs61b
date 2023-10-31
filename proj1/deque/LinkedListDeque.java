@@ -1,6 +1,6 @@
 package deque;
 /** A double ended queue.Use double sentinel.*/
-public class LinkedListDeque<AnyThing> {
+public class LinkedListDeque<AnyThing> implements Deque<AnyThing>{
     /** The structure underneath the Deque.*/
     private class AnyNode {
         private AnyThing item;
@@ -31,6 +31,7 @@ public class LinkedListDeque<AnyThing> {
         size = 1;
     }
     /** Add an element to the front.*/
+    @Override
     public void addFirst(AnyThing x) {
         // first = new AnyNode(x, first); //Important! Must create a new AnyNode.
         AnyNode newNode = new AnyNode(x, sentinel.next, sentinel);
@@ -39,6 +40,7 @@ public class LinkedListDeque<AnyThing> {
         size += 1;
     }
     /** Add an element to the back.*/
+    @Override
     public void addLast(AnyThing x) {
         size += 1;
         AnyNode newNode = new AnyNode(x, sentinel, sentinel.prev);
@@ -54,6 +56,7 @@ public class LinkedListDeque<AnyThing> {
         */
     }
     /** Removes and returns the item at the front of the deque. If no such item exists, returns null.*/
+    @Override
     public AnyThing removeFirst() {
         if (size > 0) {
             size -= 1;
@@ -64,6 +67,7 @@ public class LinkedListDeque<AnyThing> {
         return fstItem;
     }
     /** Removes and returns the item at the back of the deque. If no such item exists, returns null.*/
+    @Override
     public AnyThing removeLast() {
         if (size > 0) {
             size -= 1;
@@ -74,19 +78,22 @@ public class LinkedListDeque<AnyThing> {
         return lstItem;
     }
     /** Returns true if deque is empty, false otherwise.*/
-    public boolean isEmpty() {
-        if (sentinel.next.item == null) {
-            return true;
-        }
-        return false;
-    }
+//    @Override
+//    public boolean isEmpty() {
+//        if (sentinel.next.item == null) {
+//            return true;
+//        }
+//        return false;
+//    }
     /**  Returns the number of items in the deque.*/
+    @Override
     public int size() {
         return size;
     }
 
     /** Prints the items in the deque from first to last, separated by a space.
      * Once all the items have been printed, print out a new line.*/
+    @Override
     public void printDeque() {
         AnyNode p = sentinel.next;
         // Move p until it reaches the end of the list.
@@ -98,6 +105,7 @@ public class LinkedListDeque<AnyThing> {
     }
     /** Gets the item at the given index, where 0 is the front, 1 is the next item, and so forth.
      * Must use iteration, not recursion.*/
+    @Override
     public AnyThing get(int index) {
         AnyNode p = sentinel.next;
         int keepTrack = 0;
