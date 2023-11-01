@@ -2,7 +2,8 @@ package deque;
 
 import java.util.Comparator;
 
-public class MaxArrayDeque<T> extends ArrayDeque<T>{ // No need to implement Comparator, cuz we're not building a comparator
+public class MaxArrayDeque<T> extends ArrayDeque<T> {
+    // No need to implement Comparator, cuz we're not building a comparator
     /**Creates a MaxArrayDeque with the parameter c, which
      * is a Comparator that defines the rule of comparison(int value, string character etc.) */
     private Comparator<T> comparator;

@@ -1,6 +1,9 @@
 package deque;
+
+import java.util.Iterator;
+
 /** A double ended queue.Use double sentinel.*/
-public class LinkedListDeque<AnyThing> implements Deque<AnyThing>{
+public class LinkedListDeque<AnyThing> implements Deque<AnyThing>, Iterable<AnyThing> {
     /** The structure underneath the Deque.*/
     private class AnyNode {
         private AnyThing item;
@@ -18,18 +21,67 @@ public class LinkedListDeque<AnyThing> implements Deque<AnyThing>{
     int size;
     /** Create an empty list*/
     public LinkedListDeque() {  // Two ways to instantiate, 0 element or 1 element.
-        sentinel = new AnyNode(null, null, null);  // Use null as the initial value, cause later it could be reassigned to any type
-        sentinel.next =sentinel;
-        sentinel.prev =sentinel;
+        sentinel = new AnyNode(null, null, null);
+        // Use null as the initial value, cause later it could be reassigned to any type
+        sentinel.next = sentinel;
+        sentinel.prev = sentinel;
         size = 0;
     }
     public LinkedListDeque(AnyThing x) {  //To instantiate, pass in an item.
-        // first = new AnyNode(x, null);  // Note: first is the body of LinkedListDeque object; first.item = x; first.next
+        // first = new AnyNode(x, null);
+        // Note: first is the body of LinkedListDeque object; first.item = x; first.next
         sentinel = new AnyNode(null, null, null);
-        sentinel.next = new AnyNode(x, sentinel, sentinel);
-        sentinel.prev = new AnyNode(x, sentinel, sentinel);
+        sentinel.next = sentinel;
+        sentinel.prev = sentinel;
         size = 1;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null) {
+            return false;
+        }
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof LinkedListDeque)) {
+            return false;
+        }
+        LinkedListDeque<AnyThing> other = (LinkedListDeque<AnyThing>) o; // Must have to avoid compilation error.
+        if (other.size() != size)    {     // Cuz we use .size() here which belongs to LinkedListDeque.
+            return false;
+        }
+        for (int i = 0; i < size; i++) {
+            if (!this.get(i).equals(other.get(i))) {   // Cannot use ==. Cuz AnyThing is a general object.
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /** The Deque objects we’ll make are iterable (i.e. Iterable<T>). Need to write the iterator() method.*/
+    @Override
+    public Iterator<AnyThing> iterator() {
+        return new LinkedListDequeIterator();
+    }
+
+    public class LinkedListDequeIterator<AnyThing> implements Iterator<AnyThing> {
+        int wizPos;
+        public LinkedListDequeIterator() { // To instantiate;
+            wizPos = 0;
+        }
+        @Override
+        public boolean hasNext() {
+            return (wizPos < size);
+        }
+        @Override
+        public AnyThing next() {
+            AnyThing returnedItem = (AnyThing) get(wizPos);
+            wizPos += 1;
+            return returnedItem;
+        }
+    }
+
     /** Add an element to the front.*/
     @Override
     public void addFirst(AnyThing x) {
@@ -78,13 +130,13 @@ public class LinkedListDeque<AnyThing> implements Deque<AnyThing>{
         return lstItem;
     }
     /** Returns true if deque is empty, false otherwise.*/
-//    @Override
-//    public boolean isEmpty() {
-//        if (sentinel.next.item == null) {
-//            return true;
-//        }
-//        return false;
-//    }
+    //    @Override
+    //    public boolean isEmpty() {
+    //        if (sentinel.next.item == null) {
+    //            return true;
+    //        }
+    //        return false;
+    //    }
     /**  Returns the number of items in the deque.*/
     @Override
     public int size() {

@@ -1,38 +1,87 @@
 package deque;
 
+import java.util.Iterator;
+
 /**Use mod to simplify the if-else */
-public class ArrayDeque<AnyThing> implements Deque<AnyThing>{
+public class ArrayDeque<AnyThing> implements Deque<AnyThing>, Iterable<AnyThing> {
     private AnyThing[] items;  // public for testing, change to private
     private int size;
     private int nextFirst;
     private int nextLast;
     /** Creates an empty list. */
     public ArrayDeque() {
-        items = (AnyThing []) new Object[8];
+        items = (AnyThing[]) new Object[8];
         size = 0;
         nextFirst = 4;
         nextLast = 5;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (o == null) {
+            return false;
+        }
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof ArrayDeque)) {
+            return false;
+        }
+        ArrayDeque<AnyThing> other = (ArrayDeque<AnyThing>) o; // Must have to avoid compilation error.
+        if (other.size() != size)    {     // Cuz we use .size() here which belongs to LinkedListDeque.
+            return false;
+        }
+        for (int i = 0; i < size; i++) {
+            if (!this.get(i).equals(other.get(i))) {   // Cannot use ==. Cuz AnyThing is a general object.
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public Iterator<AnyThing> iterator() {
+        return new ArrayDequeIterator();
+    }
+
+    public class ArrayDequeIterator<AnyThing> implements Iterator<AnyThing> {
+        int wizPos;
+        public ArrayDequeIterator() {
+            wizPos = 0;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return wizPos < size;
+        }
+
+        @Override
+        public AnyThing next() {
+            AnyThing returnedItem = (AnyThing) get(wizPos);
+            wizPos += 1;
+            return returnedItem;
+        }
+    }
+
     private void resize(int capacity) {
-        AnyThing[] a = (AnyThing []) new Object[capacity];
+        AnyThing[] a = (AnyThing[]) new Object[capacity];
         System.arraycopy(items, 0, a, 0, nextLast);
         System.arraycopy(items, nextFirst + 1, a, nextFirst + 1 + capacity - items.length, items.length - nextLast);
         items = a;
     }
-//    @Override
-//    public boolean isEmpty() {
-//        if ( size == 0) {
-//            return true;
-//        }
-//        return false;
-//    }
+    //    @Override
+    //    public boolean isEmpty() {
+    //        if ( size == 0) {
+    //            return true;
+    //        }
+    //        return false;
+    //    }
 
     /** Inserts X into the back of the list. */
     @Override
     public void addLast(AnyThing x) {
         if (size == items.length) {
-            resize (size * 2);
+            resize(size * 2);
             if (nextLast == 0) {
                 nextLast += items.length / 2;
             }
@@ -52,7 +101,7 @@ public class ArrayDeque<AnyThing> implements Deque<AnyThing>{
     @Override
     public void addFirst(AnyThing x) {
         if (size == items.length) {
-            resize (size * 2);
+            resize(size * 2);
             if (nextLast == 0) {
                 nextLast += items.length / 2;
             }
@@ -141,7 +190,7 @@ public class ArrayDeque<AnyThing> implements Deque<AnyThing>{
         } else {
             startPrint = nextFirst + 1;
         }
-        while(keepTrack > 0) {
+        while (keepTrack > 0) {
             keepTrack -= 1;
             System.out.print(items[startPrint] + " ");
             if (startPrint == items.length - 1) {

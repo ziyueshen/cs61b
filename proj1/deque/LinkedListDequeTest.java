@@ -8,6 +8,40 @@ import static org.junit.Assert.*;
 public class LinkedListDequeTest {
 
     @Test
+    /** Test iterator().*/
+    public void iteratorTest() {
+        LinkedListDeque<Double> lld = new LinkedListDeque<Double>();
+        lld.addFirst(99.8);
+        lld.addFirst(129.6);
+        lld.addFirst(0.8);
+        for (double x : lld) {
+            System.out.println(x);
+        }
+    }
+
+    @Test
+    /** Test equals().*/
+    public void equalsTest() {
+        LinkedListDeque<Double> lld = new LinkedListDeque<Double>();
+        lld.addFirst(99.8);
+        lld.addFirst(129.6);
+        lld.addFirst(0.8);
+
+        LinkedListDeque<Double> lld2 = new LinkedListDeque<Double>();
+        lld2.addFirst(99.8);
+        lld2.addFirst(129.6);
+        lld2.addFirst(0.8);
+
+        boolean res = lld.equals(lld2);
+        boolean res2 = lld.equals(lld);
+        System.out.println(res);
+        System.out.println(res2);
+        assertTrue("Test lld = lld2", res);
+        assertTrue("Test lld = lld", res2);
+
+    }
+
+    @Test
     /** Adds a few things to the list, checking isEmpty() and size() are correct,
      * finally printing the results.
      *

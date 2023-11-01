@@ -9,6 +9,38 @@ import static org.junit.Assert.*;
 
 public class ArrayDequeTest {
     @Test
+    /** Test equals().*/
+    public void equalsTest() {
+        LinkedListDeque<Double> lld = new LinkedListDeque<Double>();
+        lld.addFirst(99.8);
+        lld.addFirst(129.6);
+        lld.addFirst(0.8);
+
+        LinkedListDeque<Double> lld2 = new LinkedListDeque<Double>();
+        lld2.addFirst(99.8);
+        lld2.addFirst(129.6);
+        lld2.addFirst(0.8);
+
+        boolean res = lld.equals(lld2);
+        boolean res2 = lld.equals(lld);
+        System.out.println(res);
+        System.out.println(res2);
+        assertTrue("Test lld = lld2", res);
+        assertTrue("Test lld = lld", res2);
+
+    }
+    @Test
+    /** Test iterator().*/
+    public void iteratorTest() {
+        ArrayDeque<Double> lld = new ArrayDeque<Double>();
+        lld.addFirst(99.8);
+        lld.addFirst(129.6);
+        lld.addFirst(0.8);
+        for (double x : lld) {
+            System.out.println(x);
+        }
+    }
+    @Test
     public void testAddGet() {
         ArrayDeque<Integer> testDeque= new ArrayDeque<> ();
         for (int i = 1; i <= 8; i ++) {
