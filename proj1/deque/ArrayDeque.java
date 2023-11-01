@@ -3,14 +3,14 @@ package deque;
 import java.util.Iterator;
 
 /**Use mod to simplify the if-else */
-public class ArrayDeque<AnyThing> implements Deque<AnyThing>, Iterable<AnyThing> {
-    private AnyThing[] items;  // public for testing, change to private
+public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
+    private T[] items;  // public for testing, change to private
     private int size;
     private int nextFirst;
     private int nextLast;
     /** Creates an empty list. */
     public ArrayDeque() {
-        items = (AnyThing[]) new Object[8];
+        items = (T[]) new Object[8];
         size = 0;
         nextFirst = 4;
         nextLast = 5;
@@ -24,15 +24,18 @@ public class ArrayDeque<AnyThing> implements Deque<AnyThing>, Iterable<AnyThing>
         if (this == o) {
             return true;
         }
-        if (!(o instanceof ArrayDeque)) {
+        if (!(o instanceof Deque)) {
             return false;
         }
-        ArrayDeque<AnyThing> other = (ArrayDeque<AnyThing>) o; // Must have to avoid compilation error.
-        if (other.size() != size)    {     // Cuz we use .size() here which belongs to LinkedListDeque.
+        Deque<T> other = (Deque<T>) o;
+        // Must have to avoid compilation error.
+        if (other.size() != size)    {
+            // Cuz we use .size() here which belongs to LinkedListDeque.
             return false;
         }
         for (int i = 0; i < size; i++) {
-            if (!this.get(i).equals(other.get(i))) {   // Cannot use ==. Cuz AnyThing is a general object.
+            if (!this.get(i).equals(other.get(i))) {
+                // Cannot use ==. Cuz T is a general object.
                 return false;
             }
         }
@@ -40,11 +43,11 @@ public class ArrayDeque<AnyThing> implements Deque<AnyThing>, Iterable<AnyThing>
     }
 
     @Override
-    public Iterator<AnyThing> iterator() {
+    public Iterator<T> iterator() {
         return new ArrayDequeIterator();
     }
 
-    public class ArrayDequeIterator<AnyThing> implements Iterator<AnyThing> {
+    private class ArrayDequeIterator<T> implements Iterator<T> {
         int wizPos;
         public ArrayDequeIterator() {
             wizPos = 0;
@@ -56,18 +59,19 @@ public class ArrayDeque<AnyThing> implements Deque<AnyThing>, Iterable<AnyThing>
         }
 
         @Override
-        public AnyThing next() {
-            AnyThing returnedItem = (AnyThing) get(wizPos);
+        public T next() {
+            T returnedItem = (T) get(wizPos);
             wizPos += 1;
             return returnedItem;
         }
     }
 
     private void resize(int capacity) {
-        AnyThing[] a = (AnyThing[]) new Object[capacity];
+        T[] a = (T[]) new Object[capacity];
         System.arraycopy(items, 0, a, 0, nextLast);
-        System.arraycopy(items, nextFirst + 1, a, nextFirst + 1 + capacity - items.length, items.length - nextLast);
-        items = a;
+        System.arraycopy(items, (nextFirst + 1) % items.length, a,
+                (nextFirst + 1 + capacity - items.length) % capacity, items.length - nextLast);
+        items = a;    // Add '% capacity' for debugging.
     }
     //    @Override
     //    public boolean isEmpty() {
@@ -79,7 +83,7 @@ public class ArrayDeque<AnyThing> implements Deque<AnyThing>, Iterable<AnyThing>
 
     /** Inserts X into the back of the list. */
     @Override
-    public void addLast(AnyThing x) {
+    public void addLast(T x) {
         if (size == items.length) {
             resize(size * 2);
             if (nextLast == 0) {
@@ -99,7 +103,7 @@ public class ArrayDeque<AnyThing> implements Deque<AnyThing>, Iterable<AnyThing>
     } 
     /** Inserts X into the front of the list. */
     @Override
-    public void addFirst(AnyThing x) {
+    public void addFirst(T x) {
         if (size == items.length) {
             resize(size * 2);
             if (nextLast == 0) {
@@ -120,7 +124,7 @@ public class ArrayDeque<AnyThing> implements Deque<AnyThing>, Iterable<AnyThing>
 
     /** Gets the ith item in the list (0 is the front). */
     @Override
-    public AnyThing get(int index) {
+    public T get(int index) {
         if (index < items.length) {
             int realIndex = nextFirst + 1 + index;
             if (realIndex > items.length - 1) {
@@ -141,9 +145,9 @@ public class ArrayDeque<AnyThing> implements Deque<AnyThing>, Iterable<AnyThing>
     /** Deletes item from back of the list and
      * returns deleted item. */
     @Override
-    public AnyThing removeLast() {
+    public T removeLast() {
         if (size > 0) {
-            AnyThing lstItem;
+            T lstItem;
             size -= 1;
             if (nextLast == 0) {
                 lstItem = items[items.length - 1];
@@ -161,10 +165,10 @@ public class ArrayDeque<AnyThing> implements Deque<AnyThing>, Iterable<AnyThing>
     /** Deletes item from front of the list and
      * returns deleted item. */
     @Override
-    public AnyThing removeFirst() {
+    public T removeFirst() {
         if (size > 0) {
             size -= 1;
-            AnyThing fstItem;
+            T fstItem;
             if (nextFirst == items.length - 1) {
                 fstItem = items[0];
                 items[0] = null;

@@ -2,8 +2,8 @@ package gh2;
 import edu.princeton.cs.algs4.StdAudio;
 import edu.princeton.cs.algs4.StdDraw;
 public class GuitarHero {
-    public static String keyboard = "q2we4r5ty7u8i9op-[=zxdcfvgbnjmk,.;/' ";
-    public static double [] doubleArray = new double[37];
+    private static String keyboard = "q2we4r5ty7u8i9op-[=zxdcfvgbnjmk,.;/' ";
+    private static double [] doubleArray = new double[37];
     public static void main(String[] args) {
         for (int i = 0; i < 37; i++) {
             doubleArray[i] = 440.0 * Math.pow(2, (i - 24.0) / 12.0);

@@ -3,14 +3,14 @@ package deque;
 import java.util.Iterator;
 
 /** A double ended queue.Use double sentinel.*/
-public class LinkedListDeque<AnyThing> implements Deque<AnyThing>, Iterable<AnyThing> {
+public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
     /** The structure underneath the Deque.*/
     private class AnyNode {
-        private AnyThing item;
+        private T item;
         private AnyNode next;
         private AnyNode prev;  // Circular structure.
 
-        private AnyNode(AnyThing i, AnyNode n, AnyNode p) {  //Constructor, like__init__.
+        private AnyNode(T i, AnyNode n, AnyNode p) {  //Constructor, like__init__.
             prev = p;
             item = i;
             next = n;
@@ -27,7 +27,7 @@ public class LinkedListDeque<AnyThing> implements Deque<AnyThing>, Iterable<AnyT
         sentinel.prev = sentinel;
         size = 0;
     }
-    public LinkedListDeque(AnyThing x) {  //To instantiate, pass in an item.
+    public LinkedListDeque(T x) {  //To instantiate, pass in an item.
         // first = new AnyNode(x, null);
         // Note: first is the body of LinkedListDeque object; first.item = x; first.next
         sentinel = new AnyNode(null, null, null);
@@ -44,28 +44,33 @@ public class LinkedListDeque<AnyThing> implements Deque<AnyThing>, Iterable<AnyT
         if (this == o) {
             return true;
         }
-        if (!(o instanceof LinkedListDeque)) {
+        if (!(o instanceof Deque)) {  // Not LinkedListDeque; To make code more general.
             return false;
         }
-        LinkedListDeque<AnyThing> other = (LinkedListDeque<AnyThing>) o; // Must have to avoid compilation error.
-        if (other.size() != size)    {     // Cuz we use .size() here which belongs to LinkedListDeque.
+        Deque<T> other = (Deque<T>) o;
+        // Must have to avoid compilation error. Use Deque here.
+        // This is the benefit of using Deque interface. Can compare different Deque classes.
+        if (other.size() != size)    {
+            // Cuz we use .size() here which belongs to LinkedListDeque.
             return false;
         }
         for (int i = 0; i < size; i++) {
-            if (!this.get(i).equals(other.get(i))) {   // Cannot use ==. Cuz AnyThing is a general object.
+            if (!this.get(i).equals(other.get(i))) {
+                // Cannot use ==. Cuz T is a general object.
                 return false;
             }
         }
         return true;
     }
 
-    /** The Deque objects we’ll make are iterable (i.e. Iterable<T>). Need to write the iterator() method.*/
+    /** The Deque objects we’ll make are iterable (i.e. Iterable<T>).
+     * Need to write the iterator() method.*/
     @Override
-    public Iterator<AnyThing> iterator() {
+    public Iterator<T> iterator() {
         return new LinkedListDequeIterator();
     }
 
-    public class LinkedListDequeIterator<AnyThing> implements Iterator<AnyThing> {
+    private class LinkedListDequeIterator<T> implements Iterator<T> {
         int wizPos;
         public LinkedListDequeIterator() { // To instantiate;
             wizPos = 0;
@@ -75,8 +80,8 @@ public class LinkedListDeque<AnyThing> implements Deque<AnyThing>, Iterable<AnyT
             return (wizPos < size);
         }
         @Override
-        public AnyThing next() {
-            AnyThing returnedItem = (AnyThing) get(wizPos);
+        public T next() {
+            T returnedItem = (T) get(wizPos);
             wizPos += 1;
             return returnedItem;
         }
@@ -84,7 +89,7 @@ public class LinkedListDeque<AnyThing> implements Deque<AnyThing>, Iterable<AnyT
 
     /** Add an element to the front.*/
     @Override
-    public void addFirst(AnyThing x) {
+    public void addFirst(T x) {
         // first = new AnyNode(x, first); //Important! Must create a new AnyNode.
         AnyNode newNode = new AnyNode(x, sentinel.next, sentinel);
         sentinel.next.prev = newNode;
@@ -93,7 +98,7 @@ public class LinkedListDeque<AnyThing> implements Deque<AnyThing>, Iterable<AnyT
     }
     /** Add an element to the back.*/
     @Override
-    public void addLast(AnyThing x) {
+    public void addLast(T x) {
         size += 1;
         AnyNode newNode = new AnyNode(x, sentinel, sentinel.prev);
         sentinel.prev.next =  newNode;
@@ -107,24 +112,26 @@ public class LinkedListDeque<AnyThing> implements Deque<AnyThing>, Iterable<AnyT
         p.next = new AnyNode(x, null);
         */
     }
-    /** Removes and returns the item at the front of the deque. If no such item exists, returns null.*/
+    /** Removes and returns the item at the front of the deque.
+     * If no such item exists, returns null.*/
     @Override
-    public AnyThing removeFirst() {
+    public T removeFirst() {
         if (size > 0) {
             size -= 1;
         }
-        AnyThing fstItem = sentinel.next.item;
+        T fstItem = sentinel.next.item;
         sentinel.next.next.prev = sentinel;
         sentinel.next = sentinel.next.next;
         return fstItem;
     }
-    /** Removes and returns the item at the back of the deque. If no such item exists, returns null.*/
+    /** Removes and returns the item at the back of the deque.
+     * If no such item exists, returns null.*/
     @Override
-    public AnyThing removeLast() {
+    public T removeLast() {
         if (size > 0) {
             size -= 1;
         }
-        AnyThing lstItem = sentinel.prev.item;
+        T lstItem = sentinel.prev.item;
         sentinel.prev.prev.next = sentinel;
         sentinel.prev = sentinel.prev.prev;
         return lstItem;
@@ -158,7 +165,7 @@ public class LinkedListDeque<AnyThing> implements Deque<AnyThing>, Iterable<AnyT
     /** Gets the item at the given index, where 0 is the front, 1 is the next item, and so forth.
      * Must use iteration, not recursion.*/
     @Override
-    public AnyThing get(int index) {
+    public T get(int index) {
         AnyNode p = sentinel.next;
         int keepTrack = 0;
         while (keepTrack < index) {
@@ -169,13 +176,13 @@ public class LinkedListDeque<AnyThing> implements Deque<AnyThing>, Iterable<AnyT
     }
     /** Gets the item at the given index, where 0 is the front, 1 is the next item, and so forth.
      * Must use recursion.*/
-    public AnyThing getRecursive(int index) {
-        AnyThing res;
+    public T getRecursive(int index) {
+        T res;
         res = getHelper(sentinel.next, index);
         return res;
     }
     /** Helper for getRecursive.*/
-    private AnyThing getHelper(AnyNode p, int index) {
+    private T getHelper(AnyNode p, int index) {
         if (index == 0) {
             return p.item;
         } else {
