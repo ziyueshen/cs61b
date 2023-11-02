@@ -72,7 +72,7 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
 
     private class LinkedListDequeIterator<T> implements Iterator<T> {
         private int wizPos;
-        public LinkedListDequeIterator() { // To instantiate;
+        LinkedListDequeIterator() { // To instantiate;
             wizPos = 0;
         }
         @Override

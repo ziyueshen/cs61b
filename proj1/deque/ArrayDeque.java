@@ -49,7 +49,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
 
     private class ArrayDequeIterator<T> implements Iterator<T> {
         private int wizPos;
-        public ArrayDequeIterator() {
+        ArrayDequeIterator() {
             wizPos = 0;
         }
 
@@ -74,7 +74,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
             System.arraycopy(items, (nextFirst + 1) % items.length, a,
                     (nextFirst + 1 + capacity - items.length) % capacity, items.length - nextLast);
         } else {
-            for (int i = 0; i < items.length; i ++) {
+            for (int i = 0; i < items.length; i++) {
                 if (items[i] != null) {
                     a[i % capacity] = items[i];
                 }
@@ -159,7 +159,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
             resize(items.length / 2);
             nextFirst = nextFirst % items.length;
             nextLast = nextLast % items.length;
-            }
+        }
         if (size > 0) {
             T lstItem;
             size -= 1;
