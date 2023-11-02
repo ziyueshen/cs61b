@@ -59,7 +59,7 @@ public class ArrayDequeTest {
         LinkedListDeque<Integer> B = new LinkedListDeque<> ();
         int N = 5000;
         for (int i = 0; i < N; i += 1) {
-            int operationNumber = StdRandom.uniform(0, 5);
+            int operationNumber = StdRandom.uniform(0, 6);
             if (operationNumber == 0) {
                 // addLast
                 int randVal = StdRandom.uniform(0, 100);
@@ -95,6 +95,11 @@ public class ArrayDequeTest {
                 System.out.println("addFirst(" + randVal + ")");
                 L.printDeque();
                 B.printDeque();
+            } else if (operationNumber == 5 && L.size() > 0) {
+                int rmv = L.removeFirst();
+                int rmv2 = B.removeFirst();
+                System.out.println("rmv: " + (L.size() - 1));
+                assertEquals(rmv, rmv2);
             }
         }
     }

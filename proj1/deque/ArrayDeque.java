@@ -48,7 +48,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
     }
 
     private class ArrayDequeIterator<T> implements Iterator<T> {
-        int wizPos;
+        private int wizPos;
         public ArrayDequeIterator() {
             wizPos = 0;
         }
@@ -68,9 +68,18 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
 
     private void resize(int capacity) {
         T[] a = (T[]) new Object[capacity];
-        System.arraycopy(items, 0, a, 0, nextLast);
-        System.arraycopy(items, (nextFirst + 1) % items.length, a,
-                (nextFirst + 1 + capacity - items.length) % capacity, items.length - nextLast);
+
+        if (capacity > items.length) {
+            System.arraycopy(items, 0, a, 0, nextLast);
+            System.arraycopy(items, (nextFirst + 1) % items.length, a,
+                    (nextFirst + 1 + capacity - items.length) % capacity, items.length - nextLast);
+        } else {
+            for (int i = 0; i < items.length; i ++) {
+                if (items[i] != null) {
+                    a[i % capacity] = items[i];
+                }
+            }
+        }
         items = a;    // Add '% capacity' for debugging.
     }
     //    @Override
@@ -146,6 +155,11 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
      * returns deleted item. */
     @Override
     public T removeLast() {
+        if (size == items.length / 4) {
+            resize(items.length / 2);
+            nextFirst = nextFirst % items.length;
+            nextLast = nextLast % items.length;
+            }
         if (size > 0) {
             T lstItem;
             size -= 1;
@@ -166,6 +180,11 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
      * returns deleted item. */
     @Override
     public T removeFirst() {
+        if (size == items.length / 4) {
+            resize(items.length / 2);
+            nextFirst = nextFirst % items.length;
+            nextLast = nextLast % items.length;
+        }
         if (size > 0) {
             size -= 1;
             T fstItem;

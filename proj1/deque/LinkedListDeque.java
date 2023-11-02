@@ -17,8 +17,8 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
         }
     }
     // AnyNode first;
-    AnyNode sentinel;
-    int size;
+    private AnyNode sentinel;
+    private int size;
     /** Create an empty list*/
     public LinkedListDeque() {  // Two ways to instantiate, 0 element or 1 element.
         sentinel = new AnyNode(null, null, null);
@@ -27,14 +27,14 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
         sentinel.prev = sentinel;
         size = 0;
     }
-    public LinkedListDeque(T x) {  //To instantiate, pass in an item.
-        // first = new AnyNode(x, null);
-        // Note: first is the body of LinkedListDeque object; first.item = x; first.next
-        sentinel = new AnyNode(null, null, null);
-        sentinel.next = sentinel;
-        sentinel.prev = sentinel;
-        size = 1;
-    }
+    //    public LinkedListDeque(T x) {  //To instantiate, pass in an item.
+    //        // first = new AnyNode(x, null);
+    //        // Note: first is the body of LinkedListDeque object; first.item = x; first.next
+    //        sentinel = new AnyNode(null, null, null);
+    //        sentinel.next = sentinel;
+    //        sentinel.prev = sentinel;
+    //        size = 1;
+    //    }
 
     @Override
     public boolean equals(Object o) {
@@ -71,7 +71,7 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
     }
 
     private class LinkedListDequeIterator<T> implements Iterator<T> {
-        int wizPos;
+        private int wizPos;
         public LinkedListDequeIterator() { // To instantiate;
             wizPos = 0;
         }
