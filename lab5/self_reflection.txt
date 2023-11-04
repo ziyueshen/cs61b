@@ -1,30 +1,63 @@
 You must answer at least 4 questions, but the remaining ones are optional. The main goal of this file is to get you thinking critically about your own work, but we will also use these self reflections at the end of the semester when we do our internal review of the course.
 
 ArrayDeque:
+Q: What was the most annoying bug you had and how did you fix it? 
+A: Index out of range error due to the incorrect resizing. Randomized tests and print statements.
 
-Q: Give an example of at least one idea from the staff solution that would have made your solution better (if any).
+Q: Did you use the debugger?
+A: I used debugger in randomized tests to find the case in which Index out of range error occurs.
 
-A: 
+Q: Did you fix it by adding special cases? 
+A: Fixed it by adding if else.
 
-Q: What's something you felt proud of in your code, if anything?
+Q: Did you do any change-and-pray (where you make a tiny change and hope the AG approves)?
+A: Yes. But I ran the randomized tests first, which I found very helpful and necessary.
 
-A:
+Q: Did you end up cutting anything out to make your code simpler? If so, what?
+A: Need to redesign the implementation of resizing and addFisrt/removeFirst.
 
-Q: What's something that was particularly inelegant in your code, if anything?
-
-A:
-
-Q: What did you learn by talking to your partner about writing ArrayDeque?
-
-A:
-
-Q: What do you wish you would have known before writing ArrayDeque, if anything?
-
-A:
+Q: Does your code repeat itself anywhere? Would private helper methods have helped?
+A: Repeatedly dealing with the situation where we reach the boundary.
 
 Q: If you wrote ArrayDeque again, what would you do differently, if anything?
+A: Use mod or helper function to simplify the if-else.
 
-A:
+Q: Do you have any private helper methods?
+A: No. I may need some. A good example from other.
+https://github.com/vvwantspeed/cs61b-sp21/blob/master/proj1/deque/ArrayDeque.java
+
+Q: What do you wish you would have known before writing LinkedListDeque, if anything?
+A: What I learn from his(vvwantspeed) code:
+1) Create addOne and minusOne helper methods to calculate index in resize(), addFirst(), remove First(). In these helper methods, make use of mod(%).
+
+    protected int addOne(int index) {
+        return (index + 1) % items.length;
+    }
+    protected int minusOne(int index) {
+        return (index + items.length - 1) % items.length;   // a very smart way
+    }
+copy from: vvwantspeed@github
+
+2) Create checkMul() and checkDiv() to check if we need to resize. Use them in addFirst(), remove First().
+3) With the help of helper methods, we can copy array with loop more elegantly instead of using arraycopy().
+4) While resizing, it might be better to create the new list that starts from the first element, cause we wouldn't need to create two differnent methods for expanding and shrinking in that case. 
+
+    protected void resize(int capacity) {
+        T[] resized = (T[]) new Object[capacity];
+
+        int index = addOne(nextFirst);
+        for (int i = 0; i < size; i++) {
+            resized[i] = items[index];  // starts from the first element
+            index = addOne(index);
+        }
+
+        nextFirst = capacity - 1;    // same for expanding and shrinking
+        nextLast = size;                // same for expanding and shrinking
+        items = resized;
+    }
+copy from: vvwantspeed@github
+
+
 
 -----
 
