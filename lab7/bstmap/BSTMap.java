@@ -28,7 +28,7 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V>{
     public void printInOrder() {  // in the order of key, not value
         printHelper(node);
     }
-    public void printHelper(BSTNode node) {
+    private void printHelper(BSTNode node) {
         if (node == null) {
 
         } else {
