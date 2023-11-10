@@ -1,0 +1,26 @@
+Enter # strings to insert into the maps: 10000
+class bstmap.ULLMap: 0.86 sec
+class bstmap.BSTMap: 0.95 sec
+Java's Built-in TreeMap: 0.01 sec
+Java's Built-in HashMap: 0.00 sec
+
+Enter # strings to insert into the maps: 1000
+class bstmap.ULLMap: 0.01 sec
+class bstmap.BSTMap: 0.01 sec
+Java's Built-in TreeMap: 0.00 sec
+Java's Built-in HashMap: 0.00 sec
+
+This program inserts random Strings of length L into different types of maps as <String, Integer> pairs.
+Please enter desired length of each string: 5
+
+Enter # strings to insert into the maps: 10000
+class bstmap.ULLMap: 0.31 sec
+class bstmap.BSTMap: 0.01 sec
+Java's Built-in TreeMap: 0.01 sec
+Java's Built-in HashMap: 0.01 sec
+
+Enter # strings to insert into the maps: 1000
+class bstmap.ULLMap: 0.01 sec
+class bstmap.BSTMap: 0.00 sec
+Java's Built-in TreeMap: 0.00 sec
+Java's Built-in HashMap: 0.00 sec
