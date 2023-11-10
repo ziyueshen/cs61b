@@ -4,7 +4,39 @@ import java.util.Iterator;
 import java.util.Set;
 
 public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V>{
-    int size = 0;
+    private int size = 0;
+    private BSTNode node;
+//    public void printHelper(BSTNode node, int depth) {
+//        if (node == null) {
+//            return;
+//        } else {
+//            printHelper(node.right, depth + 1);
+//
+//            for (int i = 0; i < depth; i++) {
+//                System.out.print("  "); // 添加缩进
+//            }
+//            System.out.println(node.key);
+//
+//            printHelper(node.left, depth + 1);
+//        }
+//    }
+//    public void printInOrder() {
+//        printHelper(node, 0);
+//    }
+
+
+    public void printInOrder() {  // in the order of key, not value
+        printHelper(node);
+    }
+    public void printHelper(BSTNode node) {
+        if (node == null) {
+
+        } else {
+            printHelper(node.left);
+            System.out.println(String.valueOf(node.key) + ":" + node.val);
+            printHelper(node.right);
+        }
+    }
     /** Removes all of the mappings from this map. */
     @Override
     public void clear() {
@@ -26,7 +58,7 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V>{
      */
     @Override
     public V get(K key) {
-        if (node == null) {
+        if (node == null) {  // Must have, otherwise node.get would cause error
             return null;
         }
         BSTNode lookup = node.get(key, node);
@@ -45,13 +77,8 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V>{
     /* Associates the specified value with the specified key in this map. */
     @Override
     public void put(K k, V val) {
-        if (node != null) {
-            if (k.equals(node.key)) {
-                node.val = val;
-            } else {
-                node = node.insert(k, val, node);
-                size = size + 1;
-            }
+        if (node != null) {  // Must have, otherwise node.key would cause error
+            node = node.insert(k, val, node);
         } else {
             node = new BSTNode(k, val, null, null);
             size = size + 1;
@@ -81,8 +108,6 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V>{
         throw new UnsupportedOperationException();
     }
 
-    private BSTNode node;
-
     @Override
     public Iterator<K> iterator() {
         throw new UnsupportedOperationException();
@@ -100,18 +125,12 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V>{
             this.right = right;
         }
 
-//        BSTNode left() {
-//            return this.left;
-//        }
-//        BSTNode right() {
-//            return this.right;
-//        }
         BSTNode get(K k, BSTNode node) {
-            if (k.equals(node.key)) {
-                return node;
-            }
             if (node == null) {
                 return null;
+            }
+            if (k.equals(node.key)) {
+                return node;
             }
             if (k.compareTo((K) node.key) < 0) {
                 return get(k, node.left);
@@ -120,14 +139,17 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V>{
             }
         }
 
-        BSTNode insert(K k, V val, BSTNode node) {
-            if (node == null) {
+        BSTNode insert(K k, V val, BSTNode node) {  // ordered by key, not value
+            if (node == null) {  // Base case.
+                size += 1;
                 return new BSTNode(k, val, null, null);
             }
             if (k.compareTo((K) node.key) < 0) {
-                node.left = insert(k, val, node.left);
-            } else {
+                node.left = insert(k, val, node.left);  // Will hit base case
+            } else if (k.compareTo((K) node.key) > 0) {
                 node.right = insert(k, val, node.right);
+            } else {
+                node.val = val;
             }
             return node;
         }
