@@ -10,9 +10,9 @@ import java.util.*;
  *  @author Ziyue Shen
  */
 public class MyHashMap<K, V> implements Map61B<K, V> {
-    int DEFAULT_SIZE = 16;
-    double DEFAULT_FACTOR = 0.75;
-    int MULTI_FACTOR = 2;
+    private int DEFAULT_SIZE = 16;
+    private double DEFAULT_FACTOR = 0.75;
+    private int MULTI_FACTOR = 2;
 
     /**
      * Protected helper class to store key/value pairs
