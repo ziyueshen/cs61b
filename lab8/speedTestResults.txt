@@ -1,0 +1,70 @@
+【Insert Random】
+1）10000
+Enter # strings to insert into hashmap.ULLMap: 10000
+class hashmap.ULLMap: 0.30 sec
+
+Enter # strings to insert into your hashmap.MyHashMap: 10000
+class hashmap.MyHashMap: 0.02 sec
+
+Enter # strings to insert into Java's HashMap: 10000
+Java's Built-in HashMap: 0.01 sec
+2）100000
+Enter # strings to insert into hashmap.ULLMap: 100000
+--Stack Overflow -- couldn't add 100000 strings of length 5.
+
+Enter # strings to insert into your hashmap.MyHashMap: 100000
+class hashmap.MyHashMap: 0.12 sec
+
+Enter # strings to insert into Java's HashMap: 100000
+Java's Built-in HashMap: 0.06 sec
+
+【Insert Order】
+1）10000
+Enter # strings to insert into hashmap.ULLMap: 10000
+class hashmap.ULLMap: 0.90 sec
+
+Enter # strings to insert into hashmap.MyHashMap: 10000
+class hashmap.MyHashMap: 0.03 sec
+
+Enter # strings to insert into Java's HashMap: 10000
+Java's Built-in HashMap: 0.01 sec
+2）100000
+Enter # strings to insert into hashmap.ULLMap: 100000
+--Stack Overflow -- couldn't add 100000 strings.
+
+Enter # strings to insert into hashmap.MyHashMap: 100000
+class hashmap.MyHashMap: 0.09 sec
+
+Enter # strings to insert into Java's HashMap: 100000
+Java's Built-in HashMap: 0.08 sec
+
+【Q】
+When would it be better to use a BSTMap/TreeMap instead of a HashMap?
+【A】
+Insert random elements
+在 BSTMap 中，按照字典升序插入会导致树不平衡，最终可能形成一个链状结构，使得插入的时间复杂度为 O(n)
+
+【BucketSpeed】
+What would you like L to be?: 5
+
+Enter # strings to insert into each map: 100000
+class hashmap.MyHashMapALBuckets: 0.11 sec
+class hashmap.MyHashMapLLBuckets: 0.09 sec
+class hashmap.MyHashMapTSBuckets: 0.17 sec
+class hashmap.MyHashMapHSBuckets: 0.17 sec
+class hashmap.MyHashMapPQBuckets: 0.13 sec
+
+【Q】
+You might notice that our implementation of MyHashMapTSBuckets and MyHashMapHSBuckets searches for a Node by iterating over the entire data structure. But from what we know, trees and hash tables support more efficient lookups than that. Would our hash table speed up if we were able to use a logarithmic search over the TreeSet or a constant-time search over the HashSet? 
+【A】
+In our MyHashMap, we search for a Node by iterating over the entire bucket data structure.
+
+Collection<Node> bucket = buckets[actualCode];
+        for (Node node : bucket) {
+            if (node.key.equals(key)) {
+                return true;
+            }
+
+Would our hash table speed up if we were able to use a logarithmic search?
+For BST, it depends on the shape of the tree; most time it would.
+For Hash table, it would.
