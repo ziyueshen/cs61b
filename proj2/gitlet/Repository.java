@@ -140,8 +140,9 @@ public class Repository {
         Map<String, Commit> commitMap = readObject(COMMIT_MAP, TreeMap.class);
         String headPointer = readObject(HEAD, String.class);
         Commit lastCommit = commitMap.get(headPointer);
+
         Map<String, String> lastCommitMap = lastCommit.getFile();
-        String lastCommitID = lastCommit.getParent();
+        // String lastCommitID = lastCommit.getParent();
 
         // read from the stage area
         Map<String, String> justAdd = readObject(STAGE_AREA, TreeMap.class);
@@ -158,13 +159,13 @@ public class Repository {
             }
 
         }
-        Commit newCommit = new Commit(msg, lastCommitMap, lastCommitID);  // pass in the parentID
+        Commit newCommit = new Commit(msg, lastCommitMap, headPointer);  // pass in the parentID
         byte[] commitBlob = serialize(newCommit);
         String newCommitID = sha1(commitBlob);
         commitMap.put(newCommitID ,newCommit);
 
         writeObject(COMMIT_MAP, (Serializable) commitMap);
-        writeObject(HEAD, (Serializable) newCommitID);
+        writeObject(HEAD, (Serializable) newCommitID);  // renew the HEAD pointer
 
         STAGE_AREA.delete();//clear the stage_area
 
@@ -183,6 +184,7 @@ public class Repository {
         printCommit(headPointer, lastCommit);
 
         String parentID = lastCommit.getParent();
+        // System.out.println(parentID);  // debugging
         while (parentID != null) {
             lastCommit = commitMap.get(parentID);
             printCommit(parentID, lastCommit);
@@ -200,6 +202,7 @@ public class Repository {
 
         String message = commitToPrint.getMessage();
         System.out.println(message);
+        System.out.println();
     }
 
 }

@@ -27,8 +27,10 @@ public class Main {
                 } else {
                     System.out.println("Please enter a commit message.");
                 }
+                break; // must have, otherwise will go to the next block
             case "log":
                 Repository.log();
+                break;
             // TODO: FILL THE REST IN
         }
     }
