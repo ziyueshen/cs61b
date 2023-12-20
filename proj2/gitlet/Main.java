@@ -1,6 +1,5 @@
 package gitlet;
 
-import java.io.IOException;
 
 /** Driver class for Gitlet, a subset of the Git version-control system.
  *  @author Ziyue Shen
@@ -43,18 +42,33 @@ public class Main {
                 break;
             case "checkout":
                 Repository.checkInit();
+                // first read args.length on the left side, avoid index error
+                if (args.length == 3 && args[1].equals("--")) {
+                    Repository.checkout("HEAD", args[2]);
+                } else if (args.length == 2) {
+                    Repository.checkoutBranch(args[1]);
+                }
+                else if (args.length == 4 && args[2].equals("--")) {
+                    Repository.checkout(args[1], args[3]);
+                } else {
+                    System.out.println("Incorrect operands.");
+                }
+                break;
+            case "rm":
+                Repository.checkInit();
                 if (args.length == 1) {
                     System.out.println("Incorrect operands.");
                     System.exit(0);
-                } else if (args[1].equals("--")) {
-                    if (args.length == 2) {
-                        System.out.println("Incorrect operands.");
-                        System.exit(0);
-                    }
-                    Repository.checkout("HEAD", args[2]);
-                } else {
-                    Repository.checkout(args[1], args[3]);
                 }
+                Repository.rm(args[1]);
+                break;
+            case "branch":
+                Repository.checkInit();
+                if (args.length == 1) {
+                    System.out.println("Incorrect operands.");
+                    System.exit(0);
+                }
+                Repository.branch(args[1]);
                 break;
             default:
                 System.out.println("No command with that name exists.");
