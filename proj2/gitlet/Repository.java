@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
+import java.text.SimpleDateFormat;
 
 
 import static gitlet.Utils.*;
@@ -124,7 +125,7 @@ public class Repository {
                 addMap.put(fileName, fileContentID);
 
                 writeObject(STAGE_AREA, (Serializable) addMap);
-                writeObject(blobFile, (Serializable) fileContent);
+                writeContents(blobFile, fileContent);
             }
 
             // File fileStage = join(STAGE_DIR, fileContentID); // use SHA1 as file name in stage area
@@ -140,8 +141,15 @@ public class Repository {
         Map<String, Commit> commitMap = readObject(COMMIT_MAP, TreeMap.class);
         String headPointer = readObject(HEAD, String.class);
         Commit lastCommit = commitMap.get(headPointer);
+        Map<String, String> lastCommitMap;
 
-        Map<String, String> lastCommitMap = lastCommit.getFile();
+        Map<String, String> originalMap = lastCommit.getFile();
+        if (originalMap != null) {
+            lastCommitMap = new TreeMap<>(originalMap);
+        } else {
+            lastCommitMap = null;  // to avoid NullPointerException
+        }
+        // must create a copied map, don't mutate originalMap; otherwise would cause bug!!!
         // String lastCommitID = lastCommit.getParent();
 
         // read from the stage area
@@ -194,7 +202,7 @@ public class Repository {
     }
 
     public static void checkout(String commitID, String filename) {
-        if (commitID .equals("HEAD")) {
+        if (commitID.equals("HEAD")) {
             // read the last commit
             String headPointer = readObject(HEAD, String.class);
             replaceFile(filename, headPointer);
@@ -212,9 +220,17 @@ public class Repository {
 
         // get the blob name
         Map<String, Commit> commitMap = readObject(COMMIT_MAP, TreeMap.class);
+//        for (Map.Entry<String, Commit> entry : commitMap.entrySet()) {
+//            System.out.println(entry.getKey());
+//            Commit lastCommit = entry.getValue();
+//            Map<String, String> lastCommitMap = lastCommit.getFile();
+//            System.out.println(lastCommitMap);
+//        } // debugging
         Commit lastCommit = commitMap.get(commitID);
         Map<String, String> lastCommitMap = lastCommit.getFile();
+        // System.out.println(lastCommitMap);
         String fileBlobName = lastCommitMap.get(fileName);
+        // System.out.println(fileBlobName);
 
         // replace the content
         File fileWanted = join(OBJECTS, fileBlobName);
@@ -227,7 +243,9 @@ public class Repository {
         System.out.println("commit " + commitID);
 
         Date timestamp = commitToPrint.getDate();
-        System.out.println("Date: " + timestamp);
+        SimpleDateFormat dateFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy Z");
+        String formattedDate = dateFormat.format(timestamp);  // formatting
+        System.out.println("Date: " + formattedDate);
 
         String message = commitToPrint.getMessage();
         System.out.println(message);
