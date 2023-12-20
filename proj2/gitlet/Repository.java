@@ -35,7 +35,7 @@ public class Repository {
 
             /** Note: File obj is actually a string storing the path */
 
-    public static void initCommand() throws IOException {  // static method
+    public static void initCommand() {  // static method
         if (!GITLET_DIR.exists()) {
             GITLET_DIR.mkdir();    // create .gitlet
             OBJECTS.mkdir();
@@ -135,7 +135,7 @@ public class Repository {
         }
     }
 
-    public static void commit(String msg) throws IOException {
+    public static void commit(String msg) {
 
         // read the last commit
         Map<String, Commit> commitMap = readObject(COMMIT_MAP, TreeMap.class);
@@ -153,6 +153,10 @@ public class Repository {
         // String lastCommitID = lastCommit.getParent();
 
         // read from the stage area
+        if (!STAGE_AREA.exists()) {
+            System.out.println("No changes added to the commit.");
+            System.exit(0);
+        }
         Map<String, String> justAdd = readObject(STAGE_AREA, TreeMap.class);
         Set<String> justAddkeySet = justAdd.keySet();
 
@@ -227,9 +231,17 @@ public class Repository {
 //            System.out.println(lastCommitMap);
 //        } // debugging
         Commit lastCommit = commitMap.get(commitID);
+        if (lastCommit == null) {
+            System.out.println("No commit with that id exists.");
+            System.exit(0);
+        }
         Map<String, String> lastCommitMap = lastCommit.getFile();
         // System.out.println(lastCommitMap);
         String fileBlobName = lastCommitMap.get(fileName);
+        if (fileBlobName == null) {
+            System.out.println("File does not exist in that commit.");
+            System.exit(0);
+        }
         // System.out.println(fileBlobName);
 
         // replace the content
@@ -250,6 +262,13 @@ public class Repository {
         String message = commitToPrint.getMessage();
         System.out.println(message);
         System.out.println();
+    }
+
+    public static void checkInit() {
+        if (!GITLET_DIR.exists() || !GITLET_DIR.isDirectory()) {
+            System.out.println("Not in an initialized Gitlet directory.");
+            System.exit(0);
+        }
     }
 
 }
