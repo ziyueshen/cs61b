@@ -31,6 +31,13 @@ public class Main {
             case "log":
                 Repository.log();
                 break;
+            case "checkout":
+                if (args[1].equals("--")) {
+                    Repository.checkout("HEAD", args[2]);
+                } else {
+                    Repository.checkout(args[1], args[3]);
+                }
+                break;
             // TODO: FILL THE REST IN
         }
     }

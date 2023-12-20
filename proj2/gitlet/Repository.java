@@ -117,7 +117,7 @@ public class Repository {
                     addMap.put(fileName, fileContentID);
 
                     writeObject(STAGE_AREA, (Serializable) addMap);
-                    writeObject(blobFile, (Serializable) fileContent);
+                    writeContents(blobFile, fileContent);
                 }
             } else {
                 Map<String, String> addMap = new TreeMap<>();
@@ -191,6 +191,35 @@ public class Repository {
             parentID = lastCommit.getParent();
         }
 
+    }
+
+    public static void checkout(String commitID, String filename) {
+        if (commitID .equals("HEAD")) {
+            // read the last commit
+            String headPointer = readObject(HEAD, String.class);
+            replaceFile(filename, headPointer);
+
+        } else {
+            replaceFile(filename, commitID);
+        }
+    }
+
+    /** helper function  */
+    public static void replaceFile(String fileName, String commitID) {
+        // delete the old version
+        File fileReplaced = join(CWD, fileName);
+        // restrictedDelete(fileReplaced); // not necessary, will be replaced
+
+        // get the blob name
+        Map<String, Commit> commitMap = readObject(COMMIT_MAP, TreeMap.class);
+        Commit lastCommit = commitMap.get(commitID);
+        Map<String, String> lastCommitMap = lastCommit.getFile();
+        String fileBlobName = lastCommitMap.get(fileName);
+
+        // replace the content
+        File fileWanted = join(OBJECTS, fileBlobName);
+        byte[] fileText = readContents(fileWanted);
+        writeContents(fileReplaced, fileText);
     }
 
     public static void printCommit(String commitID, Commit commitToPrint) {
