@@ -27,6 +27,7 @@ public class Commit  implements Serializable {
     private Date timestamp;
     private Map<String, String> fileMap; // key: filename, value: fileID
     private String parent;
+    private String secondParent;
     // private Commit next;
 
     /* make the initial commit, which has zero argument */
@@ -44,6 +45,14 @@ public class Commit  implements Serializable {
 
     public String getParent() {
         return this.parent;
+    }
+
+    public String getSecondParent() {
+        return this.secondParent;
+    }
+
+    public void setSecondParent(String parentID) {
+        this.secondParent = parentID;
     }
 
     public String getMessage() {

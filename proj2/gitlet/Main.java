@@ -30,7 +30,7 @@ public class Main {
                 break;
             case "commit":
                 Repository.checkInit();
-                if (args.length >= 2) {
+                if (args.length >= 2 && !args[1].isEmpty()) {
                     Repository.commit(args[1]);
                 } else {
                     System.out.println("Please enter a commit message.");
@@ -69,6 +69,14 @@ public class Main {
                     System.exit(0);
                 }
                 Repository.branch(args[1]);
+                break;
+            case "merge":
+                Repository.checkInit();
+                if (args.length == 1) {
+                    System.out.println("Incorrect operands.");
+                    System.exit(0);
+                }
+                Repository.merge(args[1]);
                 break;
             default:
                 System.out.println("No command with that name exists.");

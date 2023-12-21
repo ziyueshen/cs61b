@@ -121,14 +121,24 @@ public class Repository {
                 String lastVersionID = lastCommitMap.get(fileName);
 
                 if (!lastVersionID.equals(fileContentID)) {         // if newly added version is different
-                    Map<String, String> addMap = new TreeMap<>();
+                    Map<String, String> addMap;
+                    if (!STAGE_AREA.exists()) {
+                        addMap = new TreeMap<>(); // should read from stage first
+                    } else {
+                        addMap =  readObject(STAGE_AREA, TreeMap.class);
+                    }
                     addMap.put(fileName, fileContentID);
 
                     writeObject(STAGE_AREA, (Serializable) addMap);
                     writeContents(blobFile, fileContent);
                 }
             } else {
-                Map<String, String> addMap = new TreeMap<>();
+                Map<String, String> addMap;
+                if (!STAGE_AREA.exists()) {
+                    addMap = new TreeMap<>(); // should read from stage first
+                } else {
+                    addMap =  readObject(STAGE_AREA, TreeMap.class);
+                }
                 addMap.put(fileName, fileContentID);
 
                 writeObject(STAGE_AREA, (Serializable) addMap);
@@ -142,7 +152,7 @@ public class Repository {
         }
     }
 
-    public static void commit(String msg) {
+    public static Commit commit(String msg) {
 
         // read the last commit
         Map<String, Commit> commitMap = readObject(COMMIT_MAP, TreeMap.class);
@@ -191,6 +201,7 @@ public class Repository {
         // writeContents(HEAD, (Serializable) newCommitID);  // renew the HEAD pointer
 
         STAGE_AREA.delete();//clear the stage_area
+        return newCommit;
 
 //        File fileToCommit = join(GITLET_DIR, justAdd.get(keyAdd));
 //        // add the new file blob; (don't delete the old blob, need to keep it)
@@ -241,6 +252,7 @@ public class Repository {
         if (lastCommitMap.containsKey(fileName)) {
             File fileRemove = join(CWD, fileName);
             restrictedDelete(fileRemove);
+            lastCommitMap.remove(fileName);
         } else if (STAGE_AREA.exists()) {
             Map<String, String> justAdd = readObject(STAGE_AREA, TreeMap.class);
             if (justAdd.containsKey(fileName)) {
@@ -292,12 +304,12 @@ public class Repository {
         }
 
         // don't bother to compare, just delete all, then copy all
-        if (fileCWD != null) {
-            for (String fileName : fileCWD) {
-                File fileToDelete = join(CWD, fileName);
-                fileToDelete.delete();
-            }
-        }
+//        if (fileCWD != null) {
+//            for (String fileName : fileCWD) {
+//                File fileToDelete = join(CWD, fileName);
+//                fileToDelete.delete();
+//            }
+//        }
 
         writeContents(HEAD, branchName);
         lastCommit = getActiveLatestCommit(); // after the HEAD moves
@@ -307,7 +319,7 @@ public class Repository {
                 File fileToWrite = join(CWD, entry.getKey());
                 File fileWanted = join(OBJECTS, entry.getValue());
                 byte[] fileText = readContents(fileWanted);
-                writeContents(fileToWrite, fileText);
+                writeContents(fileToWrite, fileText);  // overwrite if exists
             }
         }
 
@@ -315,6 +327,100 @@ public class Repository {
         if (STAGE_AREA.exists()) {
             STAGE_AREA.delete();
         }
+    }
+
+    public static void merge(String branchName) {
+        Set<String> currentBranchSet = new HashSet<>();
+        Set<String> givenBranchSet = new HashSet<>();
+
+        Map<String, String> branchMap = readObject(BRANCHES, TreeMap.class);
+        Map<String, Commit> commitMap = readObject(COMMIT_MAP, TreeMap.class);
+        String activeBranch = getActiveBranchHEAD();
+        String givenBranch = branchMap.get(branchName);
+
+        String ancestorCommitID = findAncestor(branchName, currentBranchSet, givenBranchSet);
+
+        if (currentBranchSet.contains(givenBranch)) {
+            System.out.println("Given branch is an ancestor of the current branch.");
+            System.exit(0);
+        }
+        if (activeBranch.equals(ancestorCommitID)) {
+            System.out.println("Current branch fast-forwarded.");
+            checkoutBranch(branchName);
+            System.exit(0);
+        }
+
+        // compare file one by one
+        Map<String, String> ancestorFileMap = commitMap.get(ancestorCommitID).getFile();
+        Map<String, String> currentFileMap = commitMap.get(activeBranch).getFile();
+        Map<String, String> givenFileMap = commitMap.get(givenBranch).getFile();
+
+        for (String fileName : ancestorFileMap.keySet()) {
+            if (currentFileMap.containsKey(fileName)) {
+                // not deleted in current branch
+                if (ancestorFileMap.get(fileName).equals(currentFileMap.get(fileName))) {
+                    // if current file remains unchanged vs ancestor
+                    if (!givenFileMap.containsKey(fileName)) {
+                        // deleted in given branch, should remove file
+                        // rm(fileName); this may change CWD
+                        currentFileMap.remove(fileName);
+                    } else {
+                        // not deleted in given branch, should update
+                        currentFileMap.replace(fileName, givenFileMap.get(fileName));
+                    }
+                } else {
+                    // file content changed in current branch
+                    if (!givenFileMap.containsKey(fileName)) {
+                        // deleted in given branch, conflict
+                        mergeContent(fileName, currentFileMap.get(fileName), "empty");
+                        System.out.println("Encountered a merge conflict.");
+                    } else {
+                        // not deleted in given branch, compare content
+                        if (!givenFileMap.get(fileName).equals(currentFileMap.get(fileName))) {
+                            // different changes in 2 branches, conflict
+                            mergeContent(fileName, currentFileMap.get(fileName), givenFileMap.get(fileName));
+                            System.out.println("Encountered a merge conflict.");
+                        }
+                    }
+                }
+            } else {
+                // deleted in current branch
+                if (!givenFileMap.get(fileName).equals(ancestorFileMap.get(fileName))) {
+                    // changed in given branch, conflict
+                    mergeContent(fileName, "empty", givenFileMap.get(fileName));
+                    System.out.println("Encountered a merge conflict.");
+                }
+            }
+        }
+
+        // deal with newly added files in given branch
+        for (String fileName : givenFileMap.keySet()) {
+            if (!ancestorFileMap.containsKey(fileName)) {
+                // newly added
+                if (currentFileMap.containsKey(fileName)) {
+                    // also added in current branch, compare
+                    if (!givenFileMap.get(fileName).equals(currentFileMap.get(fileName))) {
+                        // add diff contents, conflict
+                        mergeContent(fileName, currentFileMap.get(fileName), givenFileMap.get(fileName));
+                        System.out.println("Encountered a merge conflict.");
+                    }
+                } else {
+                    // not added in current branch, add to stage area
+                    // add Map must contain multiple files
+                    Map<String, String> addMap;
+                    if (!STAGE_AREA.exists()) {
+                        addMap = new TreeMap<>(); // should read from stage first
+                    } else {
+                        addMap =  readObject(STAGE_AREA, TreeMap.class);
+                    }
+                    addMap.put(fileName, givenFileMap.get(fileName));
+                    writeObject(STAGE_AREA, (Serializable) addMap);
+                }
+            }
+        }
+        String activeBranchName = readContentsAsString(HEAD);
+        Commit mergedCommit = commit("Merged " + branchName +" into " + activeBranchName + ".");
+        mergedCommit.setSecondParent(givenBranch);
     }
 
     /** helper function  */
@@ -407,6 +513,86 @@ public class Repository {
         branchMap.replace(activeBranch, commitId);
         // System.out.println(branchMap);
         writeObject(BRANCHES, (Serializable) branchMap);
+    }
+
+    public static String findAncestor(String givenBranchName, Set<String> currentBranchSet, Set<String> givenBranchSet) {
+        // may need to think about second parent
+//        Set<String> currentBranchSet = new HashSet<>();
+//        Set<String> givenBranchSet = new HashSet<>();
+        Commit activeBranchCommit;
+        String activeParentID;
+        Commit givenBranchCommit;
+        String givenParentID;
+
+        Map<String, String> branchMap = readObject(BRANCHES, TreeMap.class);
+        Map<String, Commit> commitMap = readObject(COMMIT_MAP, TreeMap.class);
+
+        String activeBranch = getActiveBranchHEAD();
+        String givenBranch = branchMap.get(givenBranchName);
+        currentBranchSet.add(activeBranch);
+        givenBranchSet.add(givenBranch);
+
+        Set<String> intersection = new HashSet<>(currentBranchSet);
+        intersection.retainAll(givenBranchSet);
+
+        while (intersection.isEmpty()) {
+            activeBranchCommit = commitMap.get(activeBranch);
+            activeParentID = activeBranchCommit.getParent();
+            if (activeParentID != null) {
+                currentBranchSet.add(activeParentID);
+                // Commit activeParentCommit = commitMap.get(activeParentID);
+                activeBranch = activeParentID;
+            }
+
+            givenBranchCommit = commitMap.get(givenBranch);
+            givenParentID = givenBranchCommit.getParent();
+            if (givenParentID != null) {
+                givenBranchSet.add(givenParentID);
+                givenBranch = givenParentID;
+            }
+
+            intersection = new HashSet<>(currentBranchSet);
+            intersection.retainAll(givenBranchSet);
+        }
+        Iterator<String> iterator = intersection.iterator();
+        return iterator.next();
+    }
+
+    public static void mergeContent(String fileName, String fileNameCurrent, String fileNameGiven) {
+        File fileCurrent = join(OBJECTS, fileNameCurrent);
+        File fileGiven = join(OBJECTS, fileNameGiven);
+        String currentContents;
+        String givenContents;
+        if (fileCurrent.equals("empty")) {
+            currentContents = "";
+        } else {
+            currentContents = readContentsAsString(fileCurrent);
+        }
+        if (fileGiven.equals("empty")) {
+            givenContents = "";
+        } else {
+            givenContents = readContentsAsString(fileGiven);
+        }
+
+        String text = "<<<<<<< HEAD" + "\n" + currentContents + "=======" + "\n" + givenContents + ">>>>>>>";
+        byte[] fileContent = serialize(text);
+
+        String fileContentID = sha1(fileContent);      // create sha1 ID
+        File blobFile = join(OBJECTS, fileContentID);
+
+
+        // read from the stage area
+        Map<String, String> addMap;
+        if (!STAGE_AREA.exists()) {
+            addMap = new TreeMap<>(); // should read from stage first
+        } else {
+            addMap =  readObject(STAGE_AREA, TreeMap.class);
+        }
+        // add to stage area
+        addMap.put(fileName, fileContentID);  // may overwrite sth in stage area
+
+        writeObject(STAGE_AREA, (Serializable) addMap);
+        writeContents(blobFile, fileContent);
     }
 
 }
