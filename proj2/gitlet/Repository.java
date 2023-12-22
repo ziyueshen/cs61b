@@ -28,6 +28,7 @@ public class Repository {
     public static final File GITLET_DIR = join(CWD, ".gitlet");
     public static final File COMMIT_MAP = join(GITLET_DIR, "commit_map");
     public static final File STAGE_AREA = join(GITLET_DIR, "stage_area");
+    public static final File REMOVE_STAGE_AREA = join(GITLET_DIR, "remove_stage_area");
     // public static final File FILE_STAGE = join(STAGE_DIR, "file_stage"); not necessary
     public static final File HEAD = join(GITLET_DIR, "HEAD");
     public static final File OBJECTS = join(GITLET_DIR, "objects");
@@ -172,10 +173,11 @@ public class Repository {
         // String lastCommitID = lastCommit.getParent();
 
         // read from the stage area
-        if (!STAGE_AREA.exists()) {
+        if (!STAGE_AREA.exists() && !REMOVE_STAGE_AREA.exists()) {
             System.out.println("No changes added to the commit.");
             System.exit(0);
         }
+        // adding stage
         Map<String, String> justAdd = readObject(STAGE_AREA, TreeMap.class);
         Set<String> justAddkeySet = justAdd.keySet();
 
@@ -190,6 +192,17 @@ public class Repository {
             }
 
         }
+
+        // read from the removal stage area
+        Map<String, String> justRemove = readObject(REMOVE_STAGE_AREA, TreeMap.class);
+        Set<String> justRemovekeySet = justRemove.keySet();
+
+        for (String keyRemove : justRemovekeySet) {
+            if (lastCommitMap != null && lastCommitMap.containsKey(keyRemove)) {   // replace the old file reference ID
+                lastCommitMap.remove(keyRemove);  // mutate lastCommitMap
+            }
+        }
+
         Commit newCommit = new Commit(msg, lastCommitMap, headPointer);  // pass in the parentID
         byte[] commitBlob = serialize(newCommit);
         String newCommitID = sha1(commitBlob);
@@ -201,6 +214,7 @@ public class Repository {
         // writeContents(HEAD, (Serializable) newCommitID);  // renew the HEAD pointer
 
         STAGE_AREA.delete();//clear the stage_area
+        REMOVE_STAGE_AREA.delete();
         return newCommit;
 
 //        File fileToCommit = join(GITLET_DIR, justAdd.get(keyAdd));
@@ -229,6 +243,43 @@ public class Repository {
 
     }
 
+    public static void status() {
+        System.out.println("=== Branches ===" + "\n");
+        String activeBranch = readContentsAsString(HEAD);
+        Map<String, String> branchMap = readObject(BRANCHES, TreeMap.class);
+        for (String branch : branchMap.keySet()) {
+            if (branch.equals(activeBranch)) {
+                System.out.println("*" + activeBranch + "\n");
+            } else {
+                System.out.println(branch + "\n");
+            }
+        }
+        System.out.println();
+
+        System.out.println("=== Staged Files ===" + "\n");
+        if (STAGE_AREA.exists()) {
+            Map<String, String> addMap =  readObject(STAGE_AREA, TreeMap.class);
+            for (String addFile : addMap.keySet()) {
+                System.out.println(addFile + "\n");
+            }
+        }
+        System.out.println();
+
+        System.out.println("=== Removed Files ===" + "\n");
+        if (REMOVE_STAGE_AREA.exists()) {
+            Map<String, String> addMap =  readObject(REMOVE_STAGE_AREA, TreeMap.class);
+            for (String addFile : addMap.keySet()) {
+                System.out.println(addFile + "\n");
+            }
+        }
+        System.out.println();
+
+        System.out.println("=== Modifications Not Staged For Commit ===" + "\n");
+        System.out.println();
+        System.out.println("=== Untracked Files ===" + "\n");
+        System.out.println();
+    }
+
     public static void checkout(String commitID, String filename) {
         if (commitID.equals("HEAD")) {
             // read the last commit
@@ -252,11 +303,24 @@ public class Repository {
         if (lastCommitMap.containsKey(fileName)) {
             File fileRemove = join(CWD, fileName);
             restrictedDelete(fileRemove);
-            lastCommitMap.remove(fileName);
+            // lastCommitMap.remove(fileName); don't change history
+            // stage for removal
+            Map<String, String> removeMap;
+            if (!REMOVE_STAGE_AREA.exists()) {
+                removeMap = new TreeMap<>(); // should read from stage first
+            } else {
+                removeMap =  readObject(REMOVE_STAGE_AREA, TreeMap.class);
+            }
+            removeMap.put(fileName, lastCommitMap.get(fileName));
+
+            writeObject(REMOVE_STAGE_AREA, (Serializable) removeMap);
+
         } else if (STAGE_AREA.exists()) {
             Map<String, String> justAdd = readObject(STAGE_AREA, TreeMap.class);
             if (justAdd.containsKey(fileName)) {
-                STAGE_AREA.delete();
+                // STAGE_AREA.delete();
+                justAdd.remove(fileName);
+                writeObject(STAGE_AREA, (Serializable) justAdd);
             } else {  // no such file in STAGE_AREA
                 System.out.println("No reason to remove the file.");
             }
@@ -293,10 +357,16 @@ public class Repository {
         List<String> fileCWD = plainFilenamesIn(CWD);
         Commit lastCommit = getActiveLatestCommit();
         Map<String, String> lastCommitMap = lastCommit.getFile();
+
+        Map<String, String> branchMap = readObject(BRANCHES, TreeMap.class);
+        String givenBranch = branchMap.get(branchName);
+        Map<String, Commit> commitMap = readObject(COMMIT_MAP, TreeMap.class);
+        Map<String, String> givenFileMap = commitMap.get(givenBranch).getFile();
+
         if (fileCWD != null) {
             for (String fileName : fileCWD) {
                 // must do the check before changing CWD
-                if (!lastCommitMap.containsKey(fileName)) {
+                if (!lastCommitMap.containsKey(fileName) && givenFileMap.containsKey(fileName)) {
                     System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
                     System.exit(0);
                 }
@@ -311,7 +381,7 @@ public class Repository {
 //            }
 //        }
 
-        writeContents(HEAD, branchName);
+        writeContents(HEAD, branchName);  // move the HEAD
         lastCommit = getActiveLatestCommit(); // after the HEAD moves
         lastCommitMap = lastCommit.getFile();
         if (lastCommitMap != null) {
@@ -326,6 +396,10 @@ public class Repository {
         // clear the stage area
         if (STAGE_AREA.exists()) {
             STAGE_AREA.delete();
+        }
+
+        if (REMOVE_STAGE_AREA.exists()) {
+            REMOVE_STAGE_AREA.delete();
         }
     }
 
@@ -361,12 +435,29 @@ public class Repository {
                 if (ancestorFileMap.get(fileName).equals(currentFileMap.get(fileName))) {
                     // if current file remains unchanged vs ancestor
                     if (!givenFileMap.containsKey(fileName)) {
-                        // deleted in given branch, should remove file
+                        // deleted in given branch, should stage for removal
                         // rm(fileName); this may change CWD
-                        currentFileMap.remove(fileName);
+                        // currentFileMap.remove(fileName); don't change history
+                        Map<String, String> removeMap;
+                        if (!REMOVE_STAGE_AREA.exists()) {
+                            removeMap = new TreeMap<>(); // should read from stage first
+                        } else {
+                            removeMap =  readObject(REMOVE_STAGE_AREA, TreeMap.class);
+                        }
+                        removeMap.put(fileName, currentFileMap.get(fileName));
+
+                        writeObject(REMOVE_STAGE_AREA, (Serializable) removeMap);
                     } else {
-                        // not deleted in given branch, should update
-                        currentFileMap.replace(fileName, givenFileMap.get(fileName));
+                        // not deleted in given branch, should update and stage for addition
+                        // currentFileMap.replace(fileName, givenFileMap.get(fileName)); don't change history
+                        Map<String, String> addMap;
+                        if (!STAGE_AREA.exists()) {
+                            addMap = new TreeMap<>(); // should read from stage first
+                        } else {
+                            addMap =  readObject(STAGE_AREA, TreeMap.class);
+                        }
+                        addMap.put(fileName, givenFileMap.get(fileName));
+                        writeObject(STAGE_AREA, (Serializable) addMap);
                     }
                 } else {
                     // file content changed in current branch
@@ -594,5 +685,4 @@ public class Repository {
         writeObject(STAGE_AREA, (Serializable) addMap);
         writeContents(blobFile, fileContent);
     }
-
 }
