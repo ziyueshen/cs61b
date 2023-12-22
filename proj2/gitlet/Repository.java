@@ -178,31 +178,35 @@ public class Repository {
             System.exit(0);
         }
         // adding stage
-        Map<String, String> justAdd = readObject(STAGE_AREA, TreeMap.class);
-        Set<String> justAddkeySet = justAdd.keySet();
+        if (STAGE_AREA.exists()) {
+            Map<String, String> justAdd = readObject(STAGE_AREA, TreeMap.class);
+            Set<String> justAddkeySet = justAdd.keySet();
 
-        for (String keyAdd : justAddkeySet) {
-            if (lastCommitMap != null && lastCommitMap.containsKey(keyAdd)) {   // replace the old file reference ID
-                lastCommitMap.replace(keyAdd, justAdd.get(keyAdd));  // mutate lastCommitMap
-            } else if (lastCommitMap == null) {        // create CommitMap
-                lastCommitMap = new TreeMap<>();
-                lastCommitMap.put(keyAdd, justAdd.get(keyAdd));
-            } else {                                   // add new files
-                lastCommitMap.put(keyAdd, justAdd.get(keyAdd));
+            for (String keyAdd : justAddkeySet) {
+                if (lastCommitMap != null && lastCommitMap.containsKey(keyAdd)) {   // replace the old file reference ID
+                    lastCommitMap.replace(keyAdd, justAdd.get(keyAdd));  // mutate lastCommitMap
+                } else if (lastCommitMap == null) {        // create CommitMap
+                    lastCommitMap = new TreeMap<>();
+                    lastCommitMap.put(keyAdd, justAdd.get(keyAdd));
+                } else {                                   // add new files
+                    lastCommitMap.put(keyAdd, justAdd.get(keyAdd));
+                }
+
             }
-
+            STAGE_AREA.delete();//clear the stage_area
         }
-
         // read from the removal stage area
-        Map<String, String> justRemove = readObject(REMOVE_STAGE_AREA, TreeMap.class);
-        Set<String> justRemovekeySet = justRemove.keySet();
+        if (REMOVE_STAGE_AREA.exists()) {
+            Map<String, String> justRemove = readObject(REMOVE_STAGE_AREA, TreeMap.class);
+            Set<String> justRemovekeySet = justRemove.keySet();
 
-        for (String keyRemove : justRemovekeySet) {
-            if (lastCommitMap != null && lastCommitMap.containsKey(keyRemove)) {   // replace the old file reference ID
-                lastCommitMap.remove(keyRemove);  // mutate lastCommitMap
+            for (String keyRemove : justRemovekeySet) {
+                if (lastCommitMap != null && lastCommitMap.containsKey(keyRemove)) {   // replace the old file reference ID
+                    lastCommitMap.remove(keyRemove);  // mutate lastCommitMap
+                }
             }
+            REMOVE_STAGE_AREA.delete();
         }
-
         Commit newCommit = new Commit(msg, lastCommitMap, headPointer);  // pass in the parentID
         byte[] commitBlob = serialize(newCommit);
         String newCommitID = sha1(commitBlob);
@@ -213,8 +217,6 @@ public class Repository {
         mutateActiveBranchHEAD(newCommitID);
         // writeContents(HEAD, (Serializable) newCommitID);  // renew the HEAD pointer
 
-        STAGE_AREA.delete();//clear the stage_area
-        REMOVE_STAGE_AREA.delete();
         return newCommit;
 
 //        File fileToCommit = join(GITLET_DIR, justAdd.get(keyAdd));
@@ -244,39 +246,39 @@ public class Repository {
     }
 
     public static void status() {
-        System.out.println("=== Branches ===" + "\n");
+        System.out.println("=== Branches ===");  // println contains \n implicitly
         String activeBranch = readContentsAsString(HEAD);
         Map<String, String> branchMap = readObject(BRANCHES, TreeMap.class);
         for (String branch : branchMap.keySet()) {
             if (branch.equals(activeBranch)) {
-                System.out.println("*" + activeBranch + "\n");
+                System.out.println("*" + activeBranch);
             } else {
-                System.out.println(branch + "\n");
+                System.out.println(branch);
             }
         }
         System.out.println();
 
-        System.out.println("=== Staged Files ===" + "\n");
+        System.out.println("=== Staged Files ===");
         if (STAGE_AREA.exists()) {
             Map<String, String> addMap =  readObject(STAGE_AREA, TreeMap.class);
             for (String addFile : addMap.keySet()) {
-                System.out.println(addFile + "\n");
+                System.out.println(addFile);
             }
         }
         System.out.println();
 
-        System.out.println("=== Removed Files ===" + "\n");
+        System.out.println("=== Removed Files ===");
         if (REMOVE_STAGE_AREA.exists()) {
             Map<String, String> addMap =  readObject(REMOVE_STAGE_AREA, TreeMap.class);
             for (String addFile : addMap.keySet()) {
-                System.out.println(addFile + "\n");
+                System.out.println(addFile);
             }
         }
         System.out.println();
 
-        System.out.println("=== Modifications Not Staged For Commit ===" + "\n");
+        System.out.println("=== Modifications Not Staged For Commit ===");
         System.out.println();
-        System.out.println("=== Untracked Files ===" + "\n");
+        System.out.println("=== Untracked Files ===");
         System.out.println();
     }
 
@@ -357,7 +359,7 @@ public class Repository {
         List<String> fileCWD = plainFilenamesIn(CWD);
         Commit lastCommit = getActiveLatestCommit();
         Map<String, String> lastCommitMap = lastCommit.getFile();
-        
+
         String givenBranch = branchMap.get(branchName);
         Map<String, Commit> commitMap = readObject(COMMIT_MAP, TreeMap.class);
         Map<String, String> givenFileMap = commitMap.get(givenBranch).getFile();
