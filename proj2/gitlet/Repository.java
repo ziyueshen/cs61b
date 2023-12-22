@@ -357,8 +357,7 @@ public class Repository {
         List<String> fileCWD = plainFilenamesIn(CWD);
         Commit lastCommit = getActiveLatestCommit();
         Map<String, String> lastCommitMap = lastCommit.getFile();
-
-        Map<String, String> branchMap = readObject(BRANCHES, TreeMap.class);
+        
         String givenBranch = branchMap.get(branchName);
         Map<String, Commit> commitMap = readObject(COMMIT_MAP, TreeMap.class);
         Map<String, String> givenFileMap = commitMap.get(givenBranch).getFile();
