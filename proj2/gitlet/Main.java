@@ -40,6 +40,18 @@ public class Main {
                 Repository.checkInit();
                 Repository.log();
                 break;
+            case "global-log":
+                Repository.checkInit();
+                Repository.globalLog();
+                break;
+            case "find":
+                Repository.checkInit();
+                if (args.length == 1) {
+                    System.out.println("Incorrect operands.");
+                    System.exit(0);
+                }
+                Repository.find(args[1]);
+                break;
             case "checkout":
                 Repository.checkInit();
                 // first read args.length on the left side, avoid index error
@@ -70,6 +82,14 @@ public class Main {
                 }
                 Repository.branch(args[1]);
                 break;
+            case "rm-branch":
+                Repository.checkInit();
+                if (args.length == 1) {
+                    System.out.println("Incorrect operands.");
+                    System.exit(0);
+                }
+                Repository.rmBranch(args[1]);
+                break;
             case "merge":
                 Repository.checkInit();
                 if (args.length == 1) {
@@ -81,6 +101,14 @@ public class Main {
             case "status":
                 Repository.checkInit();
                 Repository.status();
+                break;
+            case "reset":
+                Repository.checkInit();
+                if (args.length == 1) {
+                    System.out.println("Incorrect operands.");
+                    System.exit(0);
+                }
+                Repository.reset(args[1]);
                 break;
             default:
                 System.out.println("No command with that name exists.");

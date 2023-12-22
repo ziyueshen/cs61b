@@ -117,6 +117,12 @@ public class Repository {
 
 //            Commit lastCommit = lastADD.get(0);
 //            Map<String, String> lastCommitMap = lastCommit.getFile();
+            // check if the file is stage for removal
+            if (REMOVE_STAGE_AREA.exists()) {
+                Map<String, String> removeMap = readObject(REMOVE_STAGE_AREA, TreeMap.class);
+                removeMap.remove(fileName);  // no error even if the file is not there
+                writeObject(REMOVE_STAGE_AREA, (Serializable) removeMap);
+            }
 
             if (lastCommitMap != null && lastCommitMap.containsKey(fileName)) {     // the file has been committed before
                 String lastVersionID = lastCommitMap.get(fileName);
@@ -245,6 +251,26 @@ public class Repository {
 
     }
 
+    public static void globalLog() {
+        Map<String, Commit> commitMap = readObject(COMMIT_MAP, TreeMap.class);
+        for (Map.Entry<String, Commit> entry : commitMap.entrySet()) {
+            printCommit(entry.getKey(), entry.getValue());
+        }
+    }
+
+    public static void find(String msg) {
+        Map<String, Commit> commitMap = readObject(COMMIT_MAP, TreeMap.class);
+        int commitIDs = 0;
+        for (Map.Entry<String, Commit> entry : commitMap.entrySet()) {
+            if (entry.getValue().getMessage().equals(msg)) {
+                System.out.println(entry.getKey());
+                commitIDs += 1;
+            }
+        }
+        if (commitIDs == 0) {
+            System.out.println("Found no commit with that message.");
+        }
+    }
     public static void status() {
         System.out.println("=== Branches ===");  // println contains \n implicitly
         String activeBranch = readContentsAsString(HEAD);
@@ -294,7 +320,13 @@ public class Repository {
         }
     }
 
+
     public static void rm(String fileName) {
+        // deal with this first:  neither staged nor tracked by the head commit
+        if (!ifAdd(fileName) && !ifCommit(fileName)) {
+            System.out.println("No reason to remove the file.");
+            System.exit(0);
+        }
         // read the last commit
         Commit lastCommit = getActiveLatestCommit();
         // String headPointer = readObject(HEAD, String.class);
@@ -302,7 +334,7 @@ public class Repository {
 //        Commit lastCommit = commitMap.get(headPointer);
         Map<String, String> lastCommitMap = lastCommit.getFile();
 
-        if (lastCommitMap.containsKey(fileName)) {
+        if (ifCommit(fileName)) {
             File fileRemove = join(CWD, fileName);
             restrictedDelete(fileRemove);
             // lastCommitMap.remove(fileName); don't change history
@@ -311,24 +343,42 @@ public class Repository {
             if (!REMOVE_STAGE_AREA.exists()) {
                 removeMap = new TreeMap<>(); // should read from stage first
             } else {
-                removeMap =  readObject(REMOVE_STAGE_AREA, TreeMap.class);
+                removeMap = readObject(REMOVE_STAGE_AREA, TreeMap.class);
             }
             removeMap.put(fileName, lastCommitMap.get(fileName));
 
             writeObject(REMOVE_STAGE_AREA, (Serializable) removeMap);
-
-        } else if (STAGE_AREA.exists()) {
-            Map<String, String> justAdd = readObject(STAGE_AREA, TreeMap.class);
-            if (justAdd.containsKey(fileName)) {
-                // STAGE_AREA.delete();
-                justAdd.remove(fileName);
-                writeObject(STAGE_AREA, (Serializable) justAdd);
-            } else {  // no such file in STAGE_AREA
-                System.out.println("No reason to remove the file.");
-            }
-        } else {  // STAGE_AREA is empty
-            System.out.println("No reason to remove the file.");
         }
+
+        if (ifAdd(fileName)) {
+            Map<String, String> justAdd = readObject(STAGE_AREA, TreeMap.class);
+            justAdd.remove(fileName);
+            writeObject(STAGE_AREA, (Serializable) justAdd);
+            }
+    }
+
+    /** helper func, deal with null pointer error more easily */
+    public static boolean ifAdd(String fileName) {
+        if (!STAGE_AREA.exists()) {
+            return false;
+        }
+        Map<String, String> justAdd = readObject(STAGE_AREA, TreeMap.class);
+        if (!justAdd.containsKey(fileName)) {
+            return false;
+        }
+        return true;
+    }
+
+    public static boolean ifCommit(String fileName) {
+        Commit lastCommit = getActiveLatestCommit();
+        Map<String, String> lastCommitMap = lastCommit.getFile();
+        if (lastCommitMap == null) {
+            return false;
+        }
+        if (!lastCommitMap.containsKey(fileName)) {
+            return false;
+        }
+        return true;
     }
 
     public static void branch(String branchName) {
@@ -340,6 +390,33 @@ public class Repository {
         }
         branchMap.put(branchName, headPointer);
         writeObject(BRANCHES, (Serializable) branchMap);
+    }
+
+    public static void rmBranch(String branchName) {
+        String activeBranch = readContentsAsString(HEAD);
+        Map<String, String> branchMap = readObject(BRANCHES, TreeMap.class);
+        if (activeBranch.equals(branchName)) {
+            System.out.println("Cannot remove the current branch.");
+            System.exit(0);
+        }
+        if (branchMap.containsKey(branchName)) {
+            branchMap.remove(branchName);
+        } else {
+            System.out.println("A branch with that name does not exist.");
+        }
+    }
+
+    public static void reset(String commitID) {
+        Map<String, Commit> commitMap = readObject(COMMIT_MAP, TreeMap.class);
+        if (!commitMap.containsKey(commitID)) {
+            System.out.println("No commit with that id exists.");
+            System.exit(0);
+        }
+        Map<String, String> branchMap = readObject(BRANCHES, TreeMap.class);
+        String activeBranch = readContentsAsString(HEAD);
+        branchMap.put(activeBranch, commitID);
+
+        checkoutBranch(activeBranch);
     }
 
     /** dangerous!!! don't test in proj2 dir  */
@@ -360,16 +437,22 @@ public class Repository {
         Commit lastCommit = getActiveLatestCommit();
         Map<String, String> lastCommitMap = lastCommit.getFile();
 
-        String givenBranch = branchMap.get(branchName);
-        Map<String, Commit> commitMap = readObject(COMMIT_MAP, TreeMap.class);
-        Map<String, String> givenFileMap = commitMap.get(givenBranch).getFile();
+//        String givenBranch = branchMap.get(branchName);
+//        Map<String, Commit> commitMap = readObject(COMMIT_MAP, TreeMap.class);
+//        Map<String, String> givenFileMap = commitMap.get(givenBranch).getFile();
 
         if (fileCWD != null) {
             for (String fileName : fileCWD) {
-                // must do the check before changing CWD
-                if (!lastCommitMap.containsKey(fileName) && givenFileMap.containsKey(fileName)) {
+                if (!ifBranchContains(activeBranch, fileName) && ifBranchContains(branchName, fileName)) {
+                    //!lastCommitMap.containsKey(fileName) && givenFileMap.containsKey(fileName)) {
+                    // must do the check before changing CWD
                     System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
                     System.exit(0);
+                } else if (ifBranchContains(activeBranch, fileName) && !ifBranchContains(branchName, fileName)) {
+                // (lastCommitMap.containsKey(fileName) && !givenFileMap.containsKey(fileName)) {
+                    // should delete the file in CWD
+                    File fileToDelete = join(CWD, fileName);
+                    fileToDelete.delete();
                 }
             }
         }
@@ -402,6 +485,24 @@ public class Repository {
         if (REMOVE_STAGE_AREA.exists()) {
             REMOVE_STAGE_AREA.delete();
         }
+    }
+
+    /** helper func */
+    public static boolean ifBranchContains(String branchName, String fileName) {
+        Map<String, String> branchMap = readObject(BRANCHES, TreeMap.class);
+        String commitID = branchMap.get(branchName);
+        return ifCommitContains(commitID, fileName);
+    }
+
+    public static boolean ifCommitContains(String commitID, String fileName) {
+        Map<String, Commit> commitMap = readObject(COMMIT_MAP, TreeMap.class);
+        Map<String, String> commitFileMap = commitMap.get(commitID).getFile();
+        if (commitFileMap == null) {
+            return false;
+        } else if (!commitFileMap.containsKey(fileName)) {
+            return false;
+        }
+        return true;
     }
 
     public static void merge(String branchName) {
