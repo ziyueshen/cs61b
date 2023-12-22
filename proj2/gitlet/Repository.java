@@ -404,6 +404,7 @@ public class Repository {
         } else {
             System.out.println("A branch with that name does not exist.");
         }
+        writeObject(BRANCHES, (Serializable) branchMap);
     }
 
     public static void reset(String commitID) {
@@ -415,6 +416,7 @@ public class Repository {
         Map<String, String> branchMap = readObject(BRANCHES, TreeMap.class);
         String activeBranch = readContentsAsString(HEAD);
         branchMap.put(activeBranch, commitID);
+        writeObject(BRANCHES, (Serializable) branchMap);
 
         checkoutBranch(activeBranch);
     }
@@ -540,15 +542,16 @@ public class Repository {
                         // deleted in given branch, should stage for removal
                         // rm(fileName); this may change CWD
                         // currentFileMap.remove(fileName); don't change history
-                        Map<String, String> removeMap;
-                        if (!REMOVE_STAGE_AREA.exists()) {
-                            removeMap = new TreeMap<>(); // should read from stage first
-                        } else {
-                            removeMap =  readObject(REMOVE_STAGE_AREA, TreeMap.class);
-                        }
-                        removeMap.put(fileName, currentFileMap.get(fileName));
-
-                        writeObject(REMOVE_STAGE_AREA, (Serializable) removeMap);
+                        rm(fileName);
+//                        Map<String, String> removeMap;
+//                        if (!REMOVE_STAGE_AREA.exists()) {
+//                            removeMap = new TreeMap<>(); // should read from stage first
+//                        } else {
+//                            removeMap =  readObject(REMOVE_STAGE_AREA, TreeMap.class);
+//                        }
+//                        removeMap.put(fileName, currentFileMap.get(fileName));
+//
+//                        writeObject(REMOVE_STAGE_AREA, (Serializable) removeMap);
                     } else {
                         // not deleted in given branch, should update and stage for addition
                         // currentFileMap.replace(fileName, givenFileMap.get(fileName)); don't change history
@@ -608,6 +611,13 @@ public class Repository {
                     }
                     addMap.put(fileName, givenFileMap.get(fileName));
                     writeObject(STAGE_AREA, (Serializable) addMap);
+
+                    // add to CWD
+                    String fileBlobName = givenFileMap.get(fileName);
+                    File fileAdded = join(CWD, fileName);
+                    File fileWanted = join(OBJECTS, fileBlobName);
+                    byte[] fileText = readContents(fileWanted);
+                    writeContents(fileAdded, fileText);
                 }
             }
         }
@@ -623,7 +633,8 @@ public class Repository {
         // restrictedDelete(fileReplaced); // not necessary, will be replaced
 
         // get the blob name
-        Map<String, Commit> commitMap = readObject(COMMIT_MAP, TreeMap.class);
+        TreeMap<String, Commit> commitMap = readObject(COMMIT_MAP, TreeMap.class);
+        Map<String, Commit> subMap = commitMap.subMap(commitID, commitID + "a");
 //        for (Map.Entry<String, Commit> entry : commitMap.entrySet()) {
 //            System.out.println(entry.getKey());
 //            Commit lastCommit = entry.getValue();
@@ -631,26 +642,30 @@ public class Repository {
 //            System.out.println(lastCommitMap);
 //        } // debugging
         // Commit lastCommit = getActiveLatestCommit();
-        Commit lastCommit = commitMap.get(commitID);
-        if (lastCommit == null) {
+        // Commit lastCommit = commitMap.get(commitID);
+
+        if (subMap.isEmpty()) {
             System.out.println("No commit with that id exists.");
             System.exit(0);
         }
-        Map<String, String> lastCommitMap = lastCommit.getFile();
-        // System.out.println(lastCommitMap);
+
+        for (Commit lastCommit: subMap.values()) {
+            Map<String, String> lastCommitMap = lastCommit.getFile();
+            // System.out.println(lastCommitMap);
 
 
-        String fileBlobName = lastCommitMap.get(fileName);
-        if (fileBlobName == null) {
-            System.out.println("File does not exist in that commit.");
-            System.exit(0);
+            String fileBlobName = lastCommitMap.get(fileName);
+            if (fileBlobName == null) {
+                System.out.println("File does not exist in that commit.");
+                System.exit(0);
+            }
+            // System.out.println(fileBlobName);
+
+            // replace the content
+            File fileWanted = join(OBJECTS, fileBlobName);
+            byte[] fileText = readContents(fileWanted);
+            writeContents(fileReplaced, fileText);
         }
-        // System.out.println(fileBlobName);
-
-        // replace the content
-        File fileWanted = join(OBJECTS, fileBlobName);
-        byte[] fileText = readContents(fileWanted);
-        writeContents(fileReplaced, fileText);
     }
 
     public static void printCommit(String commitID, Commit commitToPrint) {
