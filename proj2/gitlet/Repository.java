@@ -410,6 +410,7 @@ public class Repository {
             }
         }
         branchMap.replace(activeBranch, commitID);
+        writeObject(BRANCHES, (Serializable) branchMap);
         // clear the stage area
         if (STAGE_AREA.exists()) {
             STAGE_AREA.delete();
@@ -577,7 +578,7 @@ public class Repository {
                         } else {
                             // not deleted in given branch, compare content
                             if (!givenFileMap.get(fileName).equals(currentFileMap.get(fileName))
-                            && !givenFileMap.get(fileName).equals(ancestorFileMap.get(fileName))) {
+                                && !givenFileMap.get(fileName).equals(ancestorFileMap.get(fileName))) {
                                 // debug here, must compare with ancestor
                                 // different changes in 2 branches, conflict
                                 mergeContent(fileName, currentFileMap.get(fileName),
@@ -733,8 +734,10 @@ public class Repository {
         // may need to think about second parent
         Commit activeBranchCommit;
         String activeParentID;
+        String activeParentID2;
         Commit givenBranchCommit;
         String givenParentID;
+        String givenParentID2;
 
         Map<String, String> branchMap = readObject(BRANCHES, TreeMap.class);
         Map<String, Commit> commitMap = readObject(COMMIT_MAP, TreeMap.class);
@@ -747,20 +750,40 @@ public class Repository {
         Set<String> intersection = new HashSet<>(currentBranchSet);
         intersection.retainAll(givenBranchSet);
 
+        Queue<String> queActive = new LinkedList<>();
+        Queue<String> queGiven = new LinkedList<>();
+        queActive.offer(activeBranch);
+        queGiven.offer(givenBranch);
         while (intersection.isEmpty()) {
-            activeBranchCommit = commitMap.get(activeBranch);
+            String id = queActive.poll();
+            activeBranchCommit = commitMap.get(id);
             activeParentID = activeBranchCommit.getParent();
+            activeParentID2 = activeBranchCommit.getSecondParent();
             if (activeParentID != null) {
                 currentBranchSet.add(activeParentID);
+                queActive.offer(activeParentID);
                 // Commit activeParentCommit = commitMap.get(activeParentID);
-                activeBranch = activeParentID;
+                //activeBranch = activeParentID;
+            }
+            if (activeParentID2 != null) {
+                currentBranchSet.add(activeParentID2);
+                queActive.offer(activeParentID2);
             }
 
-            givenBranchCommit = commitMap.get(givenBranch);
+
+            String idGiven = queGiven.poll();
+            givenBranchCommit = commitMap.get(idGiven);
             givenParentID = givenBranchCommit.getParent();
+            givenParentID2 = givenBranchCommit.getSecondParent();
             if (givenParentID != null) {
-                givenBranchSet.add(givenParentID);
-                givenBranch = givenParentID;
+                currentBranchSet.add(givenParentID);
+                queGiven.offer(givenParentID);
+                // Commit activeParentCommit = commitMap.get(activeParentID);
+                //activeBranch = activeParentID;
+            }
+            if (givenParentID2 != null) {
+                currentBranchSet.add(givenParentID2);
+                queGiven.offer(givenParentID2);
             }
 
             intersection = new HashSet<>(currentBranchSet);
