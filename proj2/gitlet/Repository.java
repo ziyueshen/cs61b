@@ -756,34 +756,38 @@ public class Repository {
         queGiven.offer(givenBranch);
         while (intersection.isEmpty()) {
             String id = queActive.poll();
-            activeBranchCommit = commitMap.get(id);
-            activeParentID = activeBranchCommit.getParent();
-            activeParentID2 = activeBranchCommit.getSecondParent();
-            if (activeParentID != null) {
-                currentBranchSet.add(activeParentID);
-                queActive.offer(activeParentID);
-                // Commit activeParentCommit = commitMap.get(activeParentID);
-                //activeBranch = activeParentID;
-            }
-            if (activeParentID2 != null) {
-                currentBranchSet.add(activeParentID2);
-                queActive.offer(activeParentID2);
+            if (id != null) {
+                activeBranchCommit = commitMap.get(id);
+                activeParentID = activeBranchCommit.getParent();
+                activeParentID2 = activeBranchCommit.getSecondParent();
+                if (activeParentID != null) {
+                    currentBranchSet.add(activeParentID);
+                    queActive.offer(activeParentID);
+                    // Commit activeParentCommit = commitMap.get(activeParentID);
+                    //activeBranch = activeParentID;
+                }
+                if (activeParentID2 != null) {
+                    currentBranchSet.add(activeParentID2);
+                    queActive.offer(activeParentID2);
+                }
             }
 
 
             String idGiven = queGiven.poll();
-            givenBranchCommit = commitMap.get(idGiven);
-            givenParentID = givenBranchCommit.getParent();
-            givenParentID2 = givenBranchCommit.getSecondParent();
-            if (givenParentID != null) {
-                currentBranchSet.add(givenParentID);
-                queGiven.offer(givenParentID);
-                // Commit activeParentCommit = commitMap.get(activeParentID);
-                //activeBranch = activeParentID;
-            }
-            if (givenParentID2 != null) {
-                currentBranchSet.add(givenParentID2);
-                queGiven.offer(givenParentID2);
+            if (idGiven != null) {
+                givenBranchCommit = commitMap.get(idGiven);
+                givenParentID = givenBranchCommit.getParent();
+                givenParentID2 = givenBranchCommit.getSecondParent();
+                if (givenParentID != null) {
+                    givenBranchSet.add(givenParentID);
+                    queGiven.offer(givenParentID);
+                    // Commit activeParentCommit = commitMap.get(activeParentID);
+                    //activeBranch = activeParentID;
+                }
+                if (givenParentID2 != null) {
+                    givenBranchSet.add(givenParentID2);
+                    queGiven.offer(givenParentID2);
+                }
             }
 
             intersection = new HashSet<>(currentBranchSet);
