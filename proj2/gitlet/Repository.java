@@ -59,7 +59,8 @@ public class Repository {
             branchMap.put(branchName, commitID);
             writeObject(BRANCHES, (Serializable) branchMap);
         } else {
-            System.out.println("A Gitlet version-control system already exists in the current directory.");
+            System.out.println("A Gitlet version-control system " +
+                    "already exists in the current directory.");
         }
     }
 
@@ -91,7 +92,8 @@ public class Repository {
                 // the file has been committed before
                 String lastVersionID = lastCommitMap.get(fileName);
 
-                if (!lastVersionID.equals(fileContentID)) {         // if newly added version is different
+                if (!lastVersionID.equals(fileContentID)) {
+                    // if newly added version is different
                     Map<String, String> addMap;
                     if (!STAGE_AREA.exists()) {
                         addMap = new TreeMap<>(); // should read from stage first
@@ -115,11 +117,6 @@ public class Repository {
                 writeObject(STAGE_AREA, (Serializable) addMap);
                 writeContents(blobFile, fileContent);
             }
-
-            // File fileStage = join(STAGE_DIR, fileContentID); // use SHA1 as file name in stage area
-            // if the file is already in the stage area, overwrites the previous;
-            // If the current version is identical to the version in the current commit, do not stage it to be added
-            // writeContents(fileStage, fileContent);
         }
     }
 
@@ -151,8 +148,10 @@ public class Repository {
             Set<String> justAddkeySet = justAdd.keySet();
 
             for (String keyAdd : justAddkeySet) {
-                if (lastCommitMap != null && lastCommitMap.containsKey(keyAdd)) {   // replace the old file reference ID
-                    lastCommitMap.replace(keyAdd, justAdd.get(keyAdd));  // mutate lastCommitMap
+                if (lastCommitMap != null && lastCommitMap.containsKey(keyAdd)) {
+                    // replace the old file reference ID
+                    lastCommitMap.replace(keyAdd, justAdd.get(keyAdd));
+                    // mutate lastCommitMap
                 } else if (lastCommitMap == null) {        // create CommitMap
                     lastCommitMap = new TreeMap<>();
                     lastCommitMap.put(keyAdd, justAdd.get(keyAdd));
@@ -176,7 +175,8 @@ public class Repository {
             }
             REMOVE_STAGE_AREA.delete();
         }
-        Commit newCommit = new Commit(msg, lastCommitMap, headPointer);  // pass in the parentID
+        Commit newCommit = new Commit(msg, lastCommitMap, headPointer);
+        // pass in the parentID
         byte[] commitBlob = serialize(newCommit);
         String newCommitID = sha1(commitBlob);
         commitMap.put(newCommitID, newCommit);
@@ -184,7 +184,8 @@ public class Repository {
         writeObject(COMMIT_MAP, (Serializable) commitMap);
 
         mutateActiveBranchHEAD(newCommitID);
-        // writeContents(HEAD, (Serializable) newCommitID);  // renew the HEAD pointer
+        // writeContents(HEAD, (Serializable) newCommitID);
+        // renew the HEAD pointer
 
         return newCommit;
     }
@@ -383,13 +384,14 @@ public class Repository {
 
         if (fileCWD != null) {
             for (String fileName : fileCWD) {
-                if (!ifBranchContains(activeBranch, fileName) && ifCommitContains(commitID, fileName)) {
-                    //!lastCommitMap.containsKey(fileName) && givenFileMap.containsKey(fileName)) {
+                if (!ifBranchContains(activeBranch, fileName) &&
+                        ifCommitContains(commitID, fileName)) {
                     // must do the check before changing CWD
-                    System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+                    System.out.println("There is an untracked file in the way; " +
+                            "delete it, or add and commit it first.");
                     System.exit(0);
-                } else if (ifBranchContains(activeBranch, fileName) && !ifCommitContains(commitID, fileName)) {
-                    // (lastCommitMap.containsKey(fileName) && !givenFileMap.containsKey(fileName)) {
+                } else if (ifBranchContains(activeBranch, fileName) &&
+                        !ifCommitContains(commitID, fileName)) {
                     // should delete the file in CWD
                     File fileToDelete = join(CWD, fileName);
                     fileToDelete.delete();
@@ -438,13 +440,14 @@ public class Repository {
 
         if (fileCWD != null) {
             for (String fileName : fileCWD) {
-                if (!ifBranchContains(activeBranch, fileName) && ifBranchContains(branchName, fileName)) {
-                    //!lastCommitMap.containsKey(fileName) && givenFileMap.containsKey(fileName)) {
+                if (!ifBranchContains(activeBranch, fileName) &&
+                        ifBranchContains(branchName, fileName)) {
                     // must do the check before changing CWD
-                    System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+                    System.out.println("There is an untracked file in the way; " +
+                            "delete it, or add and commit it first.");
                     System.exit(0);
-                } else if (ifBranchContains(activeBranch, fileName) && !ifBranchContains(branchName, fileName)) {
-                    // (lastCommitMap.containsKey(fileName) && !givenFileMap.containsKey(fileName)) {
+                } else if (ifBranchContains(activeBranch, fileName) &&
+                        !ifBranchContains(branchName, fileName)) {
                     // should delete the file in CWD
                     File fileToDelete = join(CWD, fileName);
                     fileToDelete.delete();
@@ -501,7 +504,6 @@ public class Repository {
         String activeBranch = getActiveBranchHEAD();
         String givenBranch = branchMap.get(branchName);
 
-        String ancestorCommitID = findAncestor(branchName, currentBranchSet, givenBranchSet);
 
         if (STAGE_AREA.exists() || REMOVE_STAGE_AREA.exists()) {
             System.out.println("You have uncommitted changes.");
@@ -516,10 +518,12 @@ public class Repository {
             System.exit(0);
         }
 
+        String ancestorCommitID = findAncestor(branchName, currentBranchSet, givenBranchSet);
         if (currentBranchSet.contains(givenBranch)) {
             System.out.println("Given branch is an ancestor of the current branch.");
             System.exit(0);
         }
+
         if (activeBranch.equals(ancestorCommitID)) {
             System.out.println("Current branch fast-forwarded.");
             checkoutBranch(branchName);
@@ -552,7 +556,7 @@ public class Repository {
 //                        writeObject(REMOVE_STAGE_AREA, (Serializable) removeMap);
                         } else {
                             // not deleted in given branch, should update and stage for addition
-                            // currentFileMap.replace(fileName, givenFileMap.get(fileName)); don't change history
+                            // don't change history
                             Map<String, String> addMap;
                             if (!STAGE_AREA.exists()) {
                                 addMap = new TreeMap<>(); // should read from stage first
@@ -579,7 +583,8 @@ public class Repository {
                     }
                 } else {
                     // deleted in current branch
-                    if (!givenFileMap.get(fileName).equals(ancestorFileMap.get(fileName))) {
+                    if (givenFileMap.containsKey(fileName) &&
+                            !givenFileMap.get(fileName).equals(ancestorFileMap.get(fileName))) {
                         // changed in given branch, conflict
                         mergeContent(fileName, "empty", givenFileMap.get(fileName));
                         System.out.println("Encountered a merge conflict.");
@@ -770,7 +775,8 @@ public class Repository {
             givenContents = readContentsAsString(fileGiven);
         }
 
-        String text = "<<<<<<< HEAD" + "\n" + currentContents + "=======" + "\n" + givenContents + ">>>>>>>";
+        String text = "<<<<<<< HEAD" + "\n" + currentContents + "======="
+                + "\n" + givenContents + ">>>>>>>";
         byte[] fileContent = serialize(text);
 
         String fileContentID = sha1(fileContent);      // create sha1 ID
@@ -791,6 +797,6 @@ public class Repository {
         writeContents(blobFile, fileContent);
         // need to write the merged file into CWD and replace the old file
         File fileReplace = join(CWD, fileName);
-        writeContents(fileReplace, fileContent);
+        writeContents(fileReplace, text);
     }
 }
