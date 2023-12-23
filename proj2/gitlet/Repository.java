@@ -15,7 +15,6 @@ import static gitlet.Utils.*;
  */
 public class Repository {
     /**
-     * TODO: add instance variables here.
      *
      * List all instance variables of the Repository class here with a useful
      * comment above them describing what that variable represents and how that
@@ -34,7 +33,7 @@ public class Repository {
     public static final File OBJECTS = join(GITLET_DIR, "objects");
     public static final File BRANCHES = join(GITLET_DIR, "branches");
 
-            /** Note: File obj is actually a string storing the path */
+    /** Note: File obj is actually a string storing the path */
 
     public static void initCommand() {  // static method
         if (!GITLET_DIR.exists()) {
@@ -59,18 +58,6 @@ public class Repository {
             Map<String, String> branchMap = new TreeMap<>();
             branchMap.put(branchName, commitID);
             writeObject(BRANCHES, (Serializable) branchMap);
-
-
-                    // File initialCommitFile = join(GITLET_DIR, "initialCommit");  // create file obj
-            // Utils.writeObject(initialCommitFile, initialCommit);  // can store all in the map
-            // writeObject() can create new or overwrite local file, write the commit obj into file
-            // if (!COMMIT_MAP.exists()) {
-                // COMMIT_LIST.createNewFile();  // will store a linked list obj
-//            List<Commit> commitList = new LinkedList<>();   // need to be persistent, map is better
-//            commitList.add(initialCommit);
-//            writeObject(COMMIT_MAP, (Serializable) commitList);
-            //}
-
         } else {
             System.out.println("A Gitlet version-control system already exists in the current directory.");
         }
@@ -78,25 +65,6 @@ public class Repository {
 
 
     /** no need to make linked list from scratch, just add the parent field in commit  */
-//    private class commitNode {
-//        private Commit val;
-//        private commitNode next;  // can't use commit.next directly, due to its private access
-//        commitNode(Commit newCommit) {
-//            this.val = newCommit;
-//        }
-//    }
-//    private class commitList {
-//        private commitNode head;
-//        private commitList() {
-//            commitNode head = null;
-//        }
-//
-//        private void insert(commitNode newCommit) {
-//            newCommit.next = this.head;
-//            this.head = newCommit;
-//        }
-//
-//    }
 
     /** add the file to the stage area;  */
     public static void add(String fileName) {
@@ -109,14 +77,9 @@ public class Repository {
             String fileContentID = sha1(fileContent);      // create sha1 ID
             File blobFile = join(OBJECTS, fileContentID);
 
-//            Map<String, Commit> commitMap = readObject(COMMIT_MAP, TreeMap.class);
-//            String headPointer = readObject(HEAD, String.class);
-//            Commit lastCommit = commitMap.get(headPointer);
             Commit lastCommit = getActiveLatestCommit();
             Map<String, String> lastCommitMap = lastCommit.getFile();
 
-//            Commit lastCommit = lastADD.get(0);
-//            Map<String, String> lastCommitMap = lastCommit.getFile();
             // check if the file is stage for removal
             if (REMOVE_STAGE_AREA.exists()) {
                 Map<String, String> removeMap = readObject(REMOVE_STAGE_AREA, TreeMap.class);
@@ -124,7 +87,8 @@ public class Repository {
                 writeObject(REMOVE_STAGE_AREA, (Serializable) removeMap);
             }
 
-            if (lastCommitMap != null && lastCommitMap.containsKey(fileName)) {     // the file has been committed before
+            if (lastCommitMap != null && lastCommitMap.containsKey(fileName)) {
+                // the file has been committed before
                 String lastVersionID = lastCommitMap.get(fileName);
 
                 if (!lastVersionID.equals(fileContentID)) {         // if newly added version is different
@@ -164,8 +128,6 @@ public class Repository {
         // read the last commit
         Map<String, Commit> commitMap = readObject(COMMIT_MAP, TreeMap.class);
         String headPointer = getActiveBranchHEAD();
-//        String headPointer = readObject(HEAD, String.class);
-//        Commit lastCommit = commitMap.get(headPointer);
         Commit lastCommit = getActiveLatestCommit();
         Map<String, String> lastCommitMap;
 
@@ -199,7 +161,7 @@ public class Repository {
                 }
 
             }
-            STAGE_AREA.delete();//clear the stage_area
+            STAGE_AREA.delete(); //clear the stage_area
         }
         // read from the removal stage area
         if (REMOVE_STAGE_AREA.exists()) {
@@ -207,7 +169,8 @@ public class Repository {
             Set<String> justRemovekeySet = justRemove.keySet();
 
             for (String keyRemove : justRemovekeySet) {
-                if (lastCommitMap != null && lastCommitMap.containsKey(keyRemove)) {   // replace the old file reference ID
+                if (lastCommitMap != null && lastCommitMap.containsKey(keyRemove)) {
+                    // replace the old file reference ID
                     lastCommitMap.remove(keyRemove);  // mutate lastCommitMap
                 }
             }
@@ -216,7 +179,7 @@ public class Repository {
         Commit newCommit = new Commit(msg, lastCommitMap, headPointer);  // pass in the parentID
         byte[] commitBlob = serialize(newCommit);
         String newCommitID = sha1(commitBlob);
-        commitMap.put(newCommitID ,newCommit);
+        commitMap.put(newCommitID, newCommit);
 
         writeObject(COMMIT_MAP, (Serializable) commitMap);
 
@@ -224,19 +187,11 @@ public class Repository {
         // writeContents(HEAD, (Serializable) newCommitID);  // renew the HEAD pointer
 
         return newCommit;
-
-//        File fileToCommit = join(GITLET_DIR, justAdd.get(keyAdd));
-//        // add the new file blob; (don't delete the old blob, need to keep it)
-//        File fileFetch = join(CWD, keyAdd);
-//        byte[] fileContent = readContents(fileFetch);  // create blob
-//        writeContents(fileToCommit, fileContent);      // store the blob
     }
 
     public static void log() {
         // read the last commit
         Map<String, Commit> commitMap = readObject(COMMIT_MAP, TreeMap.class);
-//        String headPointer = readObject(HEAD, String.class);
-//        Commit lastCommit = commitMap.get(headPointer);
         String headPointer = getActiveBranchHEAD();
         Commit lastCommit = getActiveLatestCommit();
         printCommit(headPointer, lastCommit);
@@ -330,8 +285,6 @@ public class Repository {
         // read the last commit
         Commit lastCommit = getActiveLatestCommit();
         // String headPointer = readObject(HEAD, String.class);
-//        Map<String, Commit> commitMap = readObject(COMMIT_MAP, TreeMap.class);
-//        Commit lastCommit = commitMap.get(headPointer);
         Map<String, String> lastCommitMap = lastCommit.getFile();
 
         if (ifCommit(fileName)) {
@@ -354,7 +307,7 @@ public class Repository {
             Map<String, String> justAdd = readObject(STAGE_AREA, TreeMap.class);
             justAdd.remove(fileName);
             writeObject(STAGE_AREA, (Serializable) justAdd);
-            }
+        }
     }
 
     /** helper func, deal with null pointer error more easily */
@@ -407,18 +360,62 @@ public class Repository {
         writeObject(BRANCHES, (Serializable) branchMap);
     }
 
-    public static void reset(String commitID) {
+    public static String realID(String inputID) {
+        String realID = "";
+        TreeMap<String, Commit> commitMap = readObject(COMMIT_MAP, TreeMap.class);
+        Map<String, Commit> subMap = commitMap.subMap(inputID, inputID + "g");
+        for (String commitID: subMap.keySet()) {
+            realID = commitID;
+        }
+        return realID;
+    }
+
+    public static void reset(String inputcommitID) {
+        String commitID = realID(inputcommitID);
         Map<String, Commit> commitMap = readObject(COMMIT_MAP, TreeMap.class);
+        String activeBranch = readContentsAsString(HEAD);
         if (!commitMap.containsKey(commitID)) {
             System.out.println("No commit with that id exists.");
             System.exit(0);
         }
         Map<String, String> branchMap = readObject(BRANCHES, TreeMap.class);
-        String activeBranch = readContentsAsString(HEAD);
-        branchMap.put(activeBranch, commitID);
-        writeObject(BRANCHES, (Serializable) branchMap);
+        List<String> fileCWD = plainFilenamesIn(CWD);
 
-        checkoutBranch(activeBranch);
+        if (fileCWD != null) {
+            for (String fileName : fileCWD) {
+                if (!ifBranchContains(activeBranch, fileName) && ifCommitContains(commitID, fileName)) {
+                    //!lastCommitMap.containsKey(fileName) && givenFileMap.containsKey(fileName)) {
+                    // must do the check before changing CWD
+                    System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+                    System.exit(0);
+                } else if (ifBranchContains(activeBranch, fileName) && !ifCommitContains(commitID, fileName)) {
+                    // (lastCommitMap.containsKey(fileName) && !givenFileMap.containsKey(fileName)) {
+                    // should delete the file in CWD
+                    File fileToDelete = join(CWD, fileName);
+                    fileToDelete.delete();
+                }
+            }
+        }
+
+        Commit lastCommit = commitMap.get(commitID);
+        Map<String, String> lastCommitMap = lastCommit.getFile();
+        if (lastCommitMap != null) {
+            for (Map.Entry<String, String> entry : lastCommitMap.entrySet()) {
+                File fileToWrite = join(CWD, entry.getKey());
+                File fileWanted = join(OBJECTS, entry.getValue());
+                byte[] fileText = readContents(fileWanted);
+                writeContents(fileToWrite, fileText);  // overwrite if exists
+            }
+        }
+        branchMap.replace(activeBranch, commitID);
+        // clear the stage area
+        if (STAGE_AREA.exists()) {
+            STAGE_AREA.delete();
+        }
+
+        if (REMOVE_STAGE_AREA.exists()) {
+            REMOVE_STAGE_AREA.delete();
+        }
     }
 
     /** dangerous!!! don't test in proj2 dir  */
@@ -439,10 +436,6 @@ public class Repository {
         Commit lastCommit = getActiveLatestCommit();
         Map<String, String> lastCommitMap = lastCommit.getFile();
 
-//        String givenBranch = branchMap.get(branchName);
-//        Map<String, Commit> commitMap = readObject(COMMIT_MAP, TreeMap.class);
-//        Map<String, String> givenFileMap = commitMap.get(givenBranch).getFile();
-
         if (fileCWD != null) {
             for (String fileName : fileCWD) {
                 if (!ifBranchContains(activeBranch, fileName) && ifBranchContains(branchName, fileName)) {
@@ -451,21 +444,13 @@ public class Repository {
                     System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
                     System.exit(0);
                 } else if (ifBranchContains(activeBranch, fileName) && !ifBranchContains(branchName, fileName)) {
-                // (lastCommitMap.containsKey(fileName) && !givenFileMap.containsKey(fileName)) {
+                    // (lastCommitMap.containsKey(fileName) && !givenFileMap.containsKey(fileName)) {
                     // should delete the file in CWD
                     File fileToDelete = join(CWD, fileName);
                     fileToDelete.delete();
                 }
             }
         }
-
-        // don't bother to compare, just delete all, then copy all
-//        if (fileCWD != null) {
-//            for (String fileName : fileCWD) {
-//                File fileToDelete = join(CWD, fileName);
-//                fileToDelete.delete();
-//            }
-//        }
 
         writeContents(HEAD, branchName);  // move the HEAD
         lastCommit = getActiveLatestCommit(); // after the HEAD moves
@@ -518,6 +503,19 @@ public class Repository {
 
         String ancestorCommitID = findAncestor(branchName, currentBranchSet, givenBranchSet);
 
+        if (STAGE_AREA.exists() || REMOVE_STAGE_AREA.exists()) {
+            System.out.println("You have uncommitted changes.");
+            System.exit(0);
+        }
+        if (!branchMap.containsKey(branchName)) {
+            System.out.println("A branch with that name does not exist.");
+            System.exit(0);
+        }
+        if (activeBranch.equals(givenBranch)) {
+            System.out.println("Cannot merge a branch with itself.");
+            System.exit(0);
+        }
+
         if (currentBranchSet.contains(givenBranch)) {
             System.out.println("Given branch is an ancestor of the current branch.");
             System.exit(0);
@@ -532,17 +530,17 @@ public class Repository {
         Map<String, String> ancestorFileMap = commitMap.get(ancestorCommitID).getFile();
         Map<String, String> currentFileMap = commitMap.get(activeBranch).getFile();
         Map<String, String> givenFileMap = commitMap.get(givenBranch).getFile();
-
-        for (String fileName : ancestorFileMap.keySet()) {
-            if (currentFileMap.containsKey(fileName)) {
-                // not deleted in current branch
-                if (ancestorFileMap.get(fileName).equals(currentFileMap.get(fileName))) {
-                    // if current file remains unchanged vs ancestor
-                    if (!givenFileMap.containsKey(fileName)) {
-                        // deleted in given branch, should stage for removal
-                        // rm(fileName); this may change CWD
-                        // currentFileMap.remove(fileName); don't change history
-                        rm(fileName);
+        if (ancestorFileMap != null) {
+            for (String fileName : ancestorFileMap.keySet()) {
+                if (currentFileMap.containsKey(fileName)) {
+                    // not deleted in current branch
+                    if (ancestorFileMap.get(fileName).equals(currentFileMap.get(fileName))) {
+                        // if current file remains unchanged vs ancestor
+                        if (!givenFileMap.containsKey(fileName)) {
+                            // deleted in given branch, should stage for removal
+                            // rm(fileName); this may change CWD
+                            // currentFileMap.remove(fileName); don't change history
+                            rm(fileName);
 //                        Map<String, String> removeMap;
 //                        if (!REMOVE_STAGE_AREA.exists()) {
 //                            removeMap = new TreeMap<>(); // should read from stage first
@@ -552,46 +550,46 @@ public class Repository {
 //                        removeMap.put(fileName, currentFileMap.get(fileName));
 //
 //                        writeObject(REMOVE_STAGE_AREA, (Serializable) removeMap);
-                    } else {
-                        // not deleted in given branch, should update and stage for addition
-                        // currentFileMap.replace(fileName, givenFileMap.get(fileName)); don't change history
-                        Map<String, String> addMap;
-                        if (!STAGE_AREA.exists()) {
-                            addMap = new TreeMap<>(); // should read from stage first
                         } else {
-                            addMap =  readObject(STAGE_AREA, TreeMap.class);
+                            // not deleted in given branch, should update and stage for addition
+                            // currentFileMap.replace(fileName, givenFileMap.get(fileName)); don't change history
+                            Map<String, String> addMap;
+                            if (!STAGE_AREA.exists()) {
+                                addMap = new TreeMap<>(); // should read from stage first
+                            } else {
+                                addMap = readObject(STAGE_AREA, TreeMap.class);
+                            }
+                            addMap.put(fileName, givenFileMap.get(fileName));
+                            writeObject(STAGE_AREA, (Serializable) addMap);
                         }
-                        addMap.put(fileName, givenFileMap.get(fileName));
-                        writeObject(STAGE_AREA, (Serializable) addMap);
+                    } else {
+                        // file content changed in current branch
+                        if (!givenFileMap.containsKey(fileName)) {
+                            // deleted in given branch, conflict
+                            mergeContent(fileName, currentFileMap.get(fileName), "empty");
+                            System.out.println("Encountered a merge conflict.");
+                        } else {
+                            // not deleted in given branch, compare content
+                            if (!givenFileMap.get(fileName).equals(currentFileMap.get(fileName))) {
+                                // different changes in 2 branches, conflict
+                                mergeContent(fileName, currentFileMap.get(fileName), givenFileMap.get(fileName));
+                                System.out.println("Encountered a merge conflict.");
+                            }
+                        }
                     }
                 } else {
-                    // file content changed in current branch
-                    if (!givenFileMap.containsKey(fileName)) {
-                        // deleted in given branch, conflict
-                        mergeContent(fileName, currentFileMap.get(fileName), "empty");
+                    // deleted in current branch
+                    if (!givenFileMap.get(fileName).equals(ancestorFileMap.get(fileName))) {
+                        // changed in given branch, conflict
+                        mergeContent(fileName, "empty", givenFileMap.get(fileName));
                         System.out.println("Encountered a merge conflict.");
-                    } else {
-                        // not deleted in given branch, compare content
-                        if (!givenFileMap.get(fileName).equals(currentFileMap.get(fileName))) {
-                            // different changes in 2 branches, conflict
-                            mergeContent(fileName, currentFileMap.get(fileName), givenFileMap.get(fileName));
-                            System.out.println("Encountered a merge conflict.");
-                        }
                     }
-                }
-            } else {
-                // deleted in current branch
-                if (!givenFileMap.get(fileName).equals(ancestorFileMap.get(fileName))) {
-                    // changed in given branch, conflict
-                    mergeContent(fileName, "empty", givenFileMap.get(fileName));
-                    System.out.println("Encountered a merge conflict.");
                 }
             }
         }
-
         // deal with newly added files in given branch
         for (String fileName : givenFileMap.keySet()) {
-            if (!ancestorFileMap.containsKey(fileName)) {
+            if (ancestorFileMap == null || !ancestorFileMap.containsKey(fileName)) {
                 // newly added
                 if (currentFileMap.containsKey(fileName)) {
                     // also added in current branch, compare
@@ -622,7 +620,7 @@ public class Repository {
             }
         }
         String activeBranchName = readContentsAsString(HEAD);
-        Commit mergedCommit = commit("Merged " + branchName +" into " + activeBranchName + ".");
+        Commit mergedCommit = commit("Merged " + branchName + " into " + activeBranchName + ".");
         mergedCommit.setSecondParent(givenBranch);
     }
 
@@ -634,13 +632,8 @@ public class Repository {
 
         // get the blob name
         TreeMap<String, Commit> commitMap = readObject(COMMIT_MAP, TreeMap.class);
-        Map<String, Commit> subMap = commitMap.subMap(commitID, commitID + "a");
-//        for (Map.Entry<String, Commit> entry : commitMap.entrySet()) {
-//            System.out.println(entry.getKey());
-//            Commit lastCommit = entry.getValue();
-//            Map<String, String> lastCommitMap = lastCommit.getFile();
-//            System.out.println(lastCommitMap);
-//        } // debugging
+        Map<String, Commit> subMap = commitMap.subMap(commitID, commitID + "g");
+
         // Commit lastCommit = getActiveLatestCommit();
         // Commit lastCommit = commitMap.get(commitID);
 
@@ -694,10 +687,6 @@ public class Repository {
         Map<String, String> branchMap = readObject(BRANCHES, TreeMap.class);
         String latestCommitID = branchMap.get(activeBranch);
 
-//        System.out.println(activeBranch);
-//        System.out.println(branchMap);
-//        System.out.println(latestCommitID);
-
         Map<String, Commit> commitMap = readObject(COMMIT_MAP, TreeMap.class);
 
         // System.out.println(commitMap);
@@ -723,10 +712,9 @@ public class Repository {
         writeObject(BRANCHES, (Serializable) branchMap);
     }
 
-    public static String findAncestor(String givenBranchName, Set<String> currentBranchSet, Set<String> givenBranchSet) {
+    public static String findAncestor(String givenBranchName, Set<String> currentBranchSet,
+                                      Set<String> givenBranchSet) {
         // may need to think about second parent
-//        Set<String> currentBranchSet = new HashSet<>();
-//        Set<String> givenBranchSet = new HashSet<>();
         Commit activeBranchCommit;
         String activeParentID;
         Commit givenBranchCommit;
@@ -771,12 +759,12 @@ public class Repository {
         File fileGiven = join(OBJECTS, fileNameGiven);
         String currentContents;
         String givenContents;
-        if (fileCurrent.equals("empty")) {
+        if (fileNameCurrent.equals("empty")) {
             currentContents = "";
         } else {
             currentContents = readContentsAsString(fileCurrent);
         }
-        if (fileGiven.equals("empty")) {
+        if (fileNameGiven.equals("empty")) {
             givenContents = "";
         } else {
             givenContents = readContentsAsString(fileGiven);
@@ -801,5 +789,8 @@ public class Repository {
 
         writeObject(STAGE_AREA, (Serializable) addMap);
         writeContents(blobFile, fileContent);
+        // need to write the merged file into CWD and replace the old file
+        File fileReplace = join(CWD, fileName);
+        writeContents(fileReplace, fileContent);
     }
 }

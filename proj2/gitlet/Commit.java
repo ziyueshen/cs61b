@@ -1,21 +1,16 @@
 package gitlet;
 
-// TODO: any imports you need here
 import java.io.Serializable;
 import java.util.Date;
 
 import java.util.Map;
-import java.util.TreeMap;
 
 /** Represents a gitlet commit object.
- *  TODO: It's a good idea to give a description here of what else this Class
- *  does at a high level.
- *
- *  @author TODO
+
+ *  @author Ziyue Shen
  */
 public class Commit  implements Serializable {
     /**
-     * TODO: add instance variables here.
      *
      * List all instance variables of the Commit class here with a useful
      * comment above them describing what that variable represents and how that
@@ -36,7 +31,7 @@ public class Commit  implements Serializable {
         this.timestamp = new Date(0);  // 0 millisecond from 00:00:00 UTC, Thursday, 1 January 1970
     }
 
-    public Commit(String msg, Map<String, String> fileMap, String parent){
+    public Commit(String msg, Map<String, String> fileMap, String parent) {
         this.message = msg;
         this.timestamp = new Date();
         this.fileMap = fileMap;
@@ -66,7 +61,4 @@ public class Commit  implements Serializable {
     public Map<String, String> getFile() {
         return this.fileMap;
     }
-
-    /* TODO: Something to track the file
-    /* TODO: fill in the rest of this class. */
 }
