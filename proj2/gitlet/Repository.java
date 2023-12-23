@@ -59,8 +59,8 @@ public class Repository {
             branchMap.put(branchName, commitID);
             writeObject(BRANCHES, (Serializable) branchMap);
         } else {
-            System.out.println("A Gitlet version-control system " +
-                    "already exists in the current directory.");
+            System.out.println("A Gitlet version-control system "
+                    + "already exists in the current directory.");
         }
     }
 
@@ -384,14 +384,14 @@ public class Repository {
 
         if (fileCWD != null) {
             for (String fileName : fileCWD) {
-                if (!ifBranchContains(activeBranch, fileName) &&
-                        ifCommitContains(commitID, fileName)) {
+                if (!ifBranchContains(activeBranch, fileName)
+                        && ifCommitContains(commitID, fileName)) {
                     // must do the check before changing CWD
-                    System.out.println("There is an untracked file in the way; " +
-                            "delete it, or add and commit it first.");
+                    System.out.println("There is an untracked file in the way; "
+                            + "delete it, or add and commit it first.");
                     System.exit(0);
-                } else if (ifBranchContains(activeBranch, fileName) &&
-                        !ifCommitContains(commitID, fileName)) {
+                } else if (ifBranchContains(activeBranch, fileName)
+                        && !ifCommitContains(commitID, fileName)) {
                     // should delete the file in CWD
                     File fileToDelete = join(CWD, fileName);
                     fileToDelete.delete();
@@ -440,14 +440,14 @@ public class Repository {
 
         if (fileCWD != null) {
             for (String fileName : fileCWD) {
-                if (!ifBranchContains(activeBranch, fileName) &&
-                        ifBranchContains(branchName, fileName)) {
+                if (!ifBranchContains(activeBranch, fileName)
+                        && ifBranchContains(branchName, fileName)) {
                     // must do the check before changing CWD
-                    System.out.println("There is an untracked file in the way; " +
-                            "delete it, or add and commit it first.");
+                    System.out.println("There is an untracked file in the way; "
+                            + "delete it, or add and commit it first.");
                     System.exit(0);
-                } else if (ifBranchContains(activeBranch, fileName) &&
-                        !ifBranchContains(branchName, fileName)) {
+                } else if (ifBranchContains(activeBranch, fileName)
+                        && !ifBranchContains(branchName, fileName)) {
                     // should delete the file in CWD
                     File fileToDelete = join(CWD, fileName);
                     fileToDelete.delete();
@@ -504,7 +504,6 @@ public class Repository {
         String activeBranch = getActiveBranchHEAD();
         String givenBranch = branchMap.get(branchName);
 
-
         if (STAGE_AREA.exists() || REMOVE_STAGE_AREA.exists()) {
             System.out.println("You have uncommitted changes.");
             System.exit(0);
@@ -523,7 +522,6 @@ public class Repository {
             System.out.println("Given branch is an ancestor of the current branch.");
             System.exit(0);
         }
-
         if (activeBranch.equals(ancestorCommitID)) {
             System.out.println("Current branch fast-forwarded.");
             checkoutBranch(branchName);
@@ -565,6 +563,10 @@ public class Repository {
                             }
                             addMap.put(fileName, givenFileMap.get(fileName));
                             writeObject(STAGE_AREA, (Serializable) addMap);
+                            File fileReplaced = join(CWD, fileName); // write to CWD
+                            File fileWanted = join(OBJECTS, givenFileMap.get(fileName));
+                            byte[] fileContent = readContents(fileWanted);
+                            writeContents(fileReplaced, fileContent);
                         }
                     } else {
                         // file content changed in current branch
@@ -574,17 +576,20 @@ public class Repository {
                             System.out.println("Encountered a merge conflict.");
                         } else {
                             // not deleted in given branch, compare content
-                            if (!givenFileMap.get(fileName).equals(currentFileMap.get(fileName))) {
+                            if (!givenFileMap.get(fileName).equals(currentFileMap.get(fileName))
+                            && !givenFileMap.get(fileName).equals(ancestorFileMap.get(fileName))) {
+                                // debug here, must compare with ancestor
                                 // different changes in 2 branches, conflict
-                                mergeContent(fileName, currentFileMap.get(fileName), givenFileMap.get(fileName));
+                                mergeContent(fileName, currentFileMap.get(fileName),
+                                        givenFileMap.get(fileName));
                                 System.out.println("Encountered a merge conflict.");
                             }
                         }
                     }
                 } else {
                     // deleted in current branch
-                    if (givenFileMap.containsKey(fileName) &&
-                            !givenFileMap.get(fileName).equals(ancestorFileMap.get(fileName))) {
+                    if (givenFileMap.containsKey(fileName)
+                            && !givenFileMap.get(fileName).equals(ancestorFileMap.get(fileName))) {
                         // changed in given branch, conflict
                         mergeContent(fileName, "empty", givenFileMap.get(fileName));
                         System.out.println("Encountered a merge conflict.");
@@ -600,7 +605,8 @@ public class Repository {
                     // also added in current branch, compare
                     if (!givenFileMap.get(fileName).equals(currentFileMap.get(fileName))) {
                         // add diff contents, conflict
-                        mergeContent(fileName, currentFileMap.get(fileName), givenFileMap.get(fileName));
+                        mergeContent(fileName, currentFileMap.get(fileName),
+                                givenFileMap.get(fileName));
                         System.out.println("Encountered a merge conflict.");
                     }
                 } else {
@@ -618,9 +624,14 @@ public class Repository {
                     // add to CWD
                     String fileBlobName = givenFileMap.get(fileName);
                     File fileAdded = join(CWD, fileName);
-                    File fileWanted = join(OBJECTS, fileBlobName);
-                    byte[] fileText = readContents(fileWanted);
-                    writeContents(fileAdded, fileText);
+                    if (fileAdded.exists()) {
+                        System.out.println("There is an untracked file in the way; "
+                                + "delete it, or add and commit it first.");
+                    } else {
+                        File fileWanted = join(OBJECTS, fileBlobName);
+                        byte[] fileText = readContents(fileWanted);
+                        writeContents(fileAdded, fileText);
+                    }
                 }
             }
         }
@@ -776,7 +787,8 @@ public class Repository {
         }
 
         String text = "<<<<<<< HEAD" + "\n" + currentContents + "======="
-                + "\n" + givenContents + ">>>>>>>";
+                + "\n" + givenContents + ">>>>>>>" + "\n";
+        // must have a newline at the end
         byte[] fileContent = serialize(text);
 
         String fileContentID = sha1(fileContent);      // create sha1 ID
