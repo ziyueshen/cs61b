@@ -326,6 +326,8 @@ public class Repository {
     public static boolean ifCommit(String fileName) {
         Commit lastCommit = getActiveLatestCommit();
         Map<String, String> lastCommitMap = lastCommit.getFile();
+        // System.out.println(lastCommit.getMessage());
+        // System.out.println(lastCommitMap);
         if (lastCommitMap == null) {
             return false;
         }
@@ -533,6 +535,46 @@ public class Repository {
         Map<String, String> ancestorFileMap = commitMap.get(ancestorCommitID).getFile();
         Map<String, String> currentFileMap = commitMap.get(activeBranch).getFile();
         Map<String, String> givenFileMap = commitMap.get(givenBranch).getFile();
+
+        // deal with newly added files in given branch
+        for (String fileName : givenFileMap.keySet()) {
+            if (ancestorFileMap == null || !ancestorFileMap.containsKey(fileName)) {
+                // newly added
+                if (!currentFileMap.containsKey(fileName)) {
+                    // not added in current branch, add to stage area
+                    // add to CWD
+                    String fileBlobName = givenFileMap.get(fileName);
+                    File fileAdded = join(CWD, fileName);
+                    if (fileAdded.exists()) {
+                        System.out.println("There is an untracked file in the way; "
+                                + "delete it, or add and commit it first.");
+                        System.exit(0);
+                    } else {
+                        File fileWanted = join(OBJECTS, fileBlobName);
+                        byte[] fileText = readContents(fileWanted);
+                        writeContents(fileAdded, fileText);
+                    }
+                    // add Map must contain multiple files
+                    Map<String, String> addMap;
+                    if (!STAGE_AREA.exists()) {
+                        addMap = new TreeMap<>(); // should read from stage first
+                    } else {
+                        addMap =  readObject(STAGE_AREA, TreeMap.class);
+                    }
+                    addMap.put(fileName, givenFileMap.get(fileName));
+                    writeObject(STAGE_AREA, (Serializable) addMap);
+                } else {
+                    // also added in current branch, compare
+                    if (!givenFileMap.get(fileName).equals(currentFileMap.get(fileName))) {
+                        // add diff contents, conflict
+                        mergeContent(fileName, currentFileMap.get(fileName),
+                                givenFileMap.get(fileName));
+                        System.out.println("Encountered a merge conflict.");
+                    }
+                }
+            }
+        }
+
         if (ancestorFileMap != null) {
             for (String fileName : ancestorFileMap.keySet()) {
                 if (currentFileMap.containsKey(fileName)) {
@@ -598,47 +640,18 @@ public class Repository {
                 }
             }
         }
-        // deal with newly added files in given branch
-        for (String fileName : givenFileMap.keySet()) {
-            if (ancestorFileMap == null || !ancestorFileMap.containsKey(fileName)) {
-                // newly added
-                if (currentFileMap.containsKey(fileName)) {
-                    // also added in current branch, compare
-                    if (!givenFileMap.get(fileName).equals(currentFileMap.get(fileName))) {
-                        // add diff contents, conflict
-                        mergeContent(fileName, currentFileMap.get(fileName),
-                                givenFileMap.get(fileName));
-                        System.out.println("Encountered a merge conflict.");
-                    }
-                } else {
-                    // not added in current branch, add to stage area
-                    // add Map must contain multiple files
-                    Map<String, String> addMap;
-                    if (!STAGE_AREA.exists()) {
-                        addMap = new TreeMap<>(); // should read from stage first
-                    } else {
-                        addMap =  readObject(STAGE_AREA, TreeMap.class);
-                    }
-                    addMap.put(fileName, givenFileMap.get(fileName));
-                    writeObject(STAGE_AREA, (Serializable) addMap);
 
-                    // add to CWD
-                    String fileBlobName = givenFileMap.get(fileName);
-                    File fileAdded = join(CWD, fileName);
-                    if (fileAdded.exists()) {
-                        System.out.println("There is an untracked file in the way; "
-                                + "delete it, or add and commit it first.");
-                    } else {
-                        File fileWanted = join(OBJECTS, fileBlobName);
-                        byte[] fileText = readContents(fileWanted);
-                        writeContents(fileAdded, fileText);
-                    }
-                }
-            }
-        }
         String activeBranchName = readContentsAsString(HEAD);
-        Commit mergedCommit = commit("Merged " + branchName + " into " + activeBranchName + ".");
-        mergedCommit.setSecondParent(givenBranch);
+        Commit newCommit = commit("Merged " + branchName + " into " + activeBranchName + ".");
+        newCommit.setSecondParent(givenBranch);
+
+        byte[] commitBlob = serialize(newCommit);
+        String newCommitID = sha1(commitBlob);
+        commitMap.put(newCommitID, newCommit);
+
+        writeObject(COMMIT_MAP, (Serializable) commitMap);
+
+        mutateActiveBranchHEAD(newCommitID);
     }
 
     /** helper function  */
@@ -756,6 +769,7 @@ public class Repository {
         queGiven.offer(givenBranch);
         while (intersection.isEmpty()) {
             String id = queActive.poll();
+            // System.out.println("Active: " + id);
             if (id != null) {
                 activeBranchCommit = commitMap.get(id);
                 activeParentID = activeBranchCommit.getParent();
@@ -774,6 +788,7 @@ public class Repository {
 
 
             String idGiven = queGiven.poll();
+            // System.out.println("Given: " + idGiven);
             if (idGiven != null) {
                 givenBranchCommit = commitMap.get(idGiven);
                 givenParentID = givenBranchCommit.getParent();
@@ -789,7 +804,8 @@ public class Repository {
                     queGiven.offer(givenParentID2);
                 }
             }
-
+            // System.out.println("ActiveSet: " + currentBranchSet);
+            // System.out.println("GivenSet: " + givenBranchSet);
             intersection = new HashSet<>(currentBranchSet);
             intersection.retainAll(givenBranchSet);
         }
